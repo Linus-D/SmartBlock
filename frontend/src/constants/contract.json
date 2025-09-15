@@ -1,0 +1,203 @@
+{
+  "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "chainId": 31337,
+  "networkName": "Hardhat",
+  "abi": [
+    {
+      "type": "function",
+      "name": "registerUser",
+      "inputs": [
+        {
+          "name": "username",
+          "type": "string"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "updateProfilePicture",
+      "inputs": [
+        {
+          "name": "ipfsHash",
+          "type": "string"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getUserInfo",
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "profilePictureHash",
+          "type": "string"
+        },
+        {
+          "name": "isRegistered",
+          "type": "bool"
+        },
+        {
+          "name": "postCount",
+          "type": "uint256"
+        },
+        {
+          "name": "followerCount",
+          "type": "uint256"
+        },
+        {
+          "name": "followingCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "followUser",
+      "inputs": [
+        {
+          "name": "userToFollow",
+          "type": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "unfollowUser",
+      "inputs": [
+        {
+          "name": "userToUnfollow",
+          "type": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "isFollowing",
+      "inputs": [
+        {
+          "name": "follower",
+          "type": "address"
+        },
+        {
+          "name": "following",
+          "type": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "createPost",
+      "inputs": [
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "ipfsHash",
+          "type": "string"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "likePost",
+      "inputs": [
+        {
+          "name": "postId",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getPost",
+      "inputs": [
+        {
+          "name": "postId",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "name": "author",
+          "type": "address"
+        },
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "ipfsHash",
+          "type": "string"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "name": "likes",
+          "type": "uint256"
+        },
+        {
+          "name": "comments",
+          "type": "uint256"
+        },
+        {
+          "name": "shares",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getUserPosts",
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view"
+    }
+  ]
+}

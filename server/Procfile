@@ -1,0 +1,2 @@
+web: node src/index.js
+indexer: node src/indexer.js

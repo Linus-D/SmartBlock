@@ -1,0 +1,23 @@
+{
+  "name": "smartblock-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "indexer": "node src/indexer.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.15.0",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "better-sqlite3": "^9.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
