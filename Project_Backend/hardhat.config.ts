@@ -15,21 +15,24 @@ const config: HardhatUserConfig = {
 
   networks: {
     hardhat: {
-      chainId: 31337,
+      // Hardhat's default chainId is 31337, but we can explicitly set it here
+      chainId: parseInt(process.env.VITE_CHAIN_ID || "31337"),
     },
     localhost: {
-      url: "http://127.0.0.1:8545",
-      chainId: 31337,
+      url: process.env.VITE_RPC_URL || "http://127.0.0.1:8545",
+      chainId: parseInt(process.env.VITE_CHAIN_ID || "31337"),
     },
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "https://eth-sepolia.g.alchemy.com/v2/q_kkRez73ri5phr4duHN0",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      url: process.env.SEPOLIA_RPC_URL,
+      accounts: process.env.SEPOLIA_PRIVATE_KEY
+        ? [process.env.SEPOLIA_PRIVATE_KEY]
+        : [],
       chainId: 11155111,
     },
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "DDA8D55WAIBFQIBRXX2AM9WSRA9Z1SR91Q",
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 
   gasReporter: {

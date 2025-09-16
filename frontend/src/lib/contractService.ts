@@ -2,7 +2,8 @@
 import { ethers } from "ethers";
 import { CONTRACT_CONFIG } from "./contractConfig";
 
-export interface ContractUser {
+// Updated UserProfile interface to match the Solidity struct
+export interface UserProfile {
   username: string;
   profilePictureHash: string;
   isRegistered: boolean;
@@ -55,9 +56,7 @@ export class SocialMediaContractService {
     }
 
     if (!ethers.isAddress(CONTRACT_CONFIG.address)) {
-      throw new Error(
-        `Invalid contract address: ${CONTRACT_CONFIG.address}`
-      );
+      throw new Error(`Invalid contract address: ${CONTRACT_CONFIG.address}`);
     }
   }
 
@@ -85,46 +84,63 @@ export class SocialMediaContractService {
 
   private ensureContract(): ethers.Contract {
     if (!this.contract) {
-      throw new Error("Contract not initialized. Call initializeWithProvider or initializeWithSigner first.");
+      throw new Error(
+        "Contract not initialized. Call initializeWithProvider or initializeWithSigner first."
+      );
     }
     return this.contract;
   }
 
   private ensureSigner(): ethers.Signer {
     if (!this.signer) {
-      throw new Error("Signer not available. This operation requires a wallet connection.");
+      throw new Error(
+        "Signer not available. This operation requires a wallet connection."
+      );
     }
     return this.signer;
   }
 
   // User Management Functions
-  public async getUserInfo(address: string): Promise<ContractUser> {
+  // *** IMPORTANT CHANGE HERE ***
+  // Renamed getUserProfile to call the Solidity mapping 'users' directly
+  public async getUserProfile(address: string): Promise<UserProfile> {
     const contract = this.ensureContract();
+    // Directly call the 'users' mapping which returns the User struct
     const userInfo = await contract.users(address);
     return {
       username: userInfo.username,
       profilePictureHash: userInfo.profilePictureHash,
       isRegistered: userInfo.isRegistered,
-      registrationDate: Number(userInfo.registrationDate)
+      registrationDate: Number(userInfo.registrationDate),
     };
   }
 
-  public async registerUser(username: string): Promise<string> {
+  // Renamed registerUser to createProfile to match UserContext.tsx
+  public async createProfile(
+    username: string,
+    bio: string = "", // Added bio parameter to match UserContext
+    profileImageHash: string = "" // Added profileImageHash parameter
+  ): Promise<string> {
     const contract = this.ensureContract();
     this.ensureSigner();
 
-    const tx = await contract.registerUser(username);
-    await tx.wait();
-    return tx.hash;
-  }
-
-  public async updateProfile(profilePictureHash: string): Promise<string> {
-    const contract = this.ensureContract();
-    this.ensureSigner();
-
-    const tx = await contract.updateProfile(profilePictureHash);
-    await tx.wait();
-    return tx.hash;
+    // Ensure the contract has a 'createProfile' function. If not, use 'registerUser'
+    // This is a fallback in case your deployed contract only has 'registerUser' and not 'createProfile'
+    if (contract.createProfile) {
+      const tx = await contract.createProfile(username, bio, profileImageHash);
+      await tx.wait();
+      return tx.hash;
+    } else if (contract.registerUser) {
+      // If 'createProfile' doesn't exist, try 'registerUser' (from your older code)
+      // NOTE: You might need to adjust parameters if 'registerUser' doesn't take bio/profileImageHash
+      const tx = await contract.registerUser(username); // Assuming registerUser only takes username
+      await tx.wait();
+      return tx.hash;
+    } else {
+      throw new Error(
+        "Neither 'createProfile' nor 'registerUser' function found on the contract."
+      );
+    }
   }
 
   // Post Functions
@@ -138,11 +154,14 @@ export class SocialMediaContractService {
       timestamp: Number(post.timestamp),
       likeCount: Number(post.likeCount),
       commentCount: Number(post.commentCount),
-      shareCount: Number(post.shareCount)
+      shareCount: Number(post.shareCount),
     };
   }
 
-  public async createPost(content: string, ipfsHash: string = ""): Promise<string> {
+  public async createPost(
+    content: string,
+    ipfsHash: string = ""
+  ): Promise<string> {
     const contract = this.ensureContract();
     this.ensureSigner();
 
@@ -178,7 +197,10 @@ export class SocialMediaContractService {
     return tx.hash;
   }
 
-  public async addComment(postId: number, commentText: string): Promise<string> {
+  public async addComment(
+    postId: number,
+    commentText: string
+  ): Promise<string> {
     const contract = this.ensureContract();
     this.ensureSigner();
 
@@ -193,7 +215,7 @@ export class SocialMediaContractService {
     return comments.map((comment: any) => ({
       commenter: comment.commenter,
       commentText: comment.commentText,
-      timestamp: Number(comment.timestamp)
+      timestamp: Number(comment.timestamp),
     }));
   }
 
@@ -267,7 +289,7 @@ export class SocialMediaContractService {
     return {
       participant1: chat.participant1,
       participant2: chat.participant2,
-      lastActivity: Number(chat.lastActivity)
+      lastActivity: Number(chat.lastActivity),
     };
   }
 
@@ -282,7 +304,7 @@ export class SocialMediaContractService {
       sender: message.sender,
       content: message.content,
       timestamp: Number(message.timestamp),
-      read: message.read
+      read: message.read,
     }));
   }
 
@@ -298,12 +320,21 @@ export class SocialMediaContractService {
   }
 
   // Event Listeners
-  public onUserRegistered(callback: (user: string, username: string) => void): void {
+  public onUserRegistered(
+    callback: (user: string, username: string) => void
+  ): void {
     const contract = this.ensureContract();
     contract.on("UserRegistered", callback);
   }
 
-  public onPostCreated(callback: (postId: number, author: string, content: string, ipfsHash: string) => void): void {
+  public onPostCreated(
+    callback: (
+      postId: number,
+      author: string,
+      content: string,
+      ipfsHash: string
+    ) => void
+  ): void {
     const contract = this.ensureContract();
     contract.on("PostCreated", (postId, author, content, ipfsHash) => {
       callback(Number(postId), author, content, ipfsHash);
@@ -317,19 +348,29 @@ export class SocialMediaContractService {
     });
   }
 
-  public onUserFollowed(callback: (follower: string, followed: string) => void): void {
+  public onUserFollowed(
+    callback: (follower: string, followed: string) => void
+  ): void {
     const contract = this.ensureContract();
     contract.on("UserFollowed", callback);
   }
 
-  public onChatCreated(callback: (chatId: number, participant1: string, participant2: string) => void): void {
+  public onChatCreated(
+    callback: (
+      chatId: number,
+      participant1: string,
+      participant2: string
+    ) => void
+  ): void {
     const contract = this.ensureContract();
     contract.on("ChatCreated", (chatId, participant1, participant2) => {
       callback(Number(chatId), participant1, participant2);
     });
   }
 
-  public onMessageSent(callback: (chatId: number, sender: string, content: string) => void): void {
+  public onMessageSent(
+    callback: (chatId: number, sender: string, content: string) => void
+  ): void {
     const contract = this.ensureContract();
     contract.on("MessageSent", (chatId, sender, content) => {
       callback(Number(chatId), sender, content);

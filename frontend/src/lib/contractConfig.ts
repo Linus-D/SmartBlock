@@ -41,7 +41,7 @@ const CONTRACT_ABI = [
   "event PostLiked(uint256 indexed postId, address indexed liker)",
   "event UserFollowed(address indexed follower, address indexed followed)",
   "event ChatCreated(uint256 indexed chatId, address indexed participant1, address indexed participant2)",
-  "event MessageSent(uint256 indexed chatId, address indexed sender, string content)"
+  "event MessageSent(uint256 indexed chatId, address indexed sender, string content)",
 ];
 
 // Network configurations
@@ -50,21 +50,23 @@ export const NETWORK_CONFIG = {
     name: "Hardhat",
     rpcUrl: "http://localhost:8545",
     chainId: 31337,
-    blockExplorer: ""
+    blockExplorer: "",
   },
   11155111: {
     name: "Sepolia",
-    rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL || "https://eth-sepolia.g.alchemy.com/v2/q_kkRez73ri5phr4duHN0",
+    rpcUrl:
+      import.meta.env.VITE_SEPOLIA_RPC_URL ||
+      "https://eth-sepolia.g.alchemy.com/v2/q_kkRez73ri5phr4duHN0",
     chainId: 11155111,
-    blockExplorer: "https://sepolia.etherscan.io"
-  }
+    blockExplorer: "https://sepolia.etherscan.io",
+  },
 };
 
 // Contract configuration
 export const CONTRACT_CONFIG = {
   address: import.meta.env.VITE_CONTRACT_ADDRESS || "",
   abi: CONTRACT_ABI,
-  supportedChainIds: [31337, 11155111]
+  supportedChainIds: [31337, 11155111],
 };
 
 // Contract interface for type checking
@@ -80,7 +82,9 @@ export const isSupportedNetwork = (chainId: number): boolean => {
 };
 
 export const getNetworkName = (chainId: number): string => {
-  return NETWORK_CONFIG[chainId as keyof typeof NETWORK_CONFIG]?.name || "Unknown";
+  return (
+    NETWORK_CONFIG[chainId as keyof typeof NETWORK_CONFIG]?.name || "Unknown"
+  );
 };
 
 export const getRpcUrl = (chainId: number): string => {
