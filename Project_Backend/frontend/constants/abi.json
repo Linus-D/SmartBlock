@@ -1,69 +1,17 @@
 [
-  {
-    "inputs": [],
-    "name": "AlreadyFollowing",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "AlreadyLiked",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CannotFollowSelf",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ChatDoesNotExist",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ContentTooLong",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CooldownNotOver",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidUsername",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotChatParticipant",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotFollowing",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotLiked",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PostDoesNotExist",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UserAlreadyRegistered",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UserNotRegistered",
-    "type": "error"
-  },
+  { "inputs": [], "name": "AlreadyFollowing", "type": "error" },
+  { "inputs": [], "name": "AlreadyLiked", "type": "error" },
+  { "inputs": [], "name": "CannotFollowSelf", "type": "error" },
+  { "inputs": [], "name": "ChatDoesNotExist", "type": "error" },
+  { "inputs": [], "name": "ContentTooLong", "type": "error" },
+  { "inputs": [], "name": "CooldownNotOver", "type": "error" },
+  { "inputs": [], "name": "InvalidUsername", "type": "error" },
+  { "inputs": [], "name": "NotChatParticipant", "type": "error" },
+  { "inputs": [], "name": "NotFollowing", "type": "error" },
+  { "inputs": [], "name": "NotLiked", "type": "error" },
+  { "inputs": [], "name": "PostDoesNotExist", "type": "error" },
+  { "inputs": [], "name": "UserAlreadyRegistered", "type": "error" },
+  { "inputs": [], "name": "UserNotRegistered", "type": "error" },
   {
     "anonymous": false,
     "inputs": [
@@ -281,93 +229,49 @@
   {
     "inputs": [],
     "name": "COMMENT_COOLDOWN",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MAX_COMMENT_LENGTH",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MAX_CONTENT_LENGTH",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MAX_USERNAME_LENGTH",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MESSAGE_COOLDOWN",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "POST_COOLDOWN",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "commentText",
-        "type": "string"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" },
+      { "internalType": "string", "name": "commentText", "type": "string" }
     ],
     "name": "addComment",
     "outputs": [],
@@ -376,11 +280,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "participant",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "participant", "type": "address" }
     ],
     "name": "createChat",
     "outputs": [],
@@ -389,16 +289,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "string",
-        "name": "content",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "ipfsHash",
-        "type": "string"
-      }
+      { "internalType": "string", "name": "content", "type": "string" },
+      { "internalType": "string", "name": "ipfsHash", "type": "string" }
     ],
     "name": "createPost",
     "outputs": [],
@@ -407,11 +299,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "userToFollow",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "userToFollow", "type": "address" }
     ],
     "name": "followUser",
     "outputs": [],
@@ -420,11 +308,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chatId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "chatId", "type": "uint256" }
     ],
     "name": "getChat",
     "outputs": [
@@ -456,46 +340,18 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chatId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "limit",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "offset",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "chatId", "type": "uint256" },
+      { "internalType": "uint256", "name": "limit", "type": "uint256" },
+      { "internalType": "uint256", "name": "offset", "type": "uint256" }
     ],
     "name": "getChatMessages",
     "outputs": [
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "sender",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "read",
-            "type": "bool"
-          }
+          { "internalType": "address", "name": "sender", "type": "address" },
+          { "internalType": "string", "name": "content", "type": "string" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+          { "internalType": "bool", "name": "read", "type": "bool" }
         ],
         "internalType": "struct SocialMediaPlatform.Message[]",
         "name": "",
@@ -507,108 +363,54 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "user", "type": "address" }
     ],
     "name": "getChatWithUser",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "user", "type": "address" }
     ],
     "name": "getFollowers",
     "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
+      { "internalType": "address[]", "name": "", "type": "address[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "user", "type": "address" }
     ],
     "name": "getFollowing",
     "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
+      { "internalType": "address[]", "name": "", "type": "address[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "getPost",
     "outputs": [
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "author",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "ipfsHash",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "likeCount",
-            "type": "uint256"
-          },
+          { "internalType": "address", "name": "author", "type": "address" },
+          { "internalType": "string", "name": "content", "type": "string" },
+          { "internalType": "string", "name": "ipfsHash", "type": "string" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+          { "internalType": "uint256", "name": "likeCount", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "commentCount",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "shareCount",
-            "type": "uint256"
-          }
+          { "internalType": "uint256", "name": "shareCount", "type": "uint256" }
         ],
         "internalType": "struct SocialMediaPlatform.Post",
         "name": "",
@@ -620,31 +422,15 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "getPostComments",
     "outputs": [
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "commenter",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "commentText",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          }
+          { "internalType": "address", "name": "commenter", "type": "address" },
+          { "internalType": "string", "name": "commentText", "type": "string" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
         ],
         "internalType": "struct SocialMediaPlatform.Comment[]",
         "name": "",
@@ -656,19 +442,11 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "getPostLikes",
     "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
+      { "internalType": "address[]", "name": "", "type": "address[]" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -676,13 +454,7 @@
   {
     "inputs": [],
     "name": "getTotalPosts",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -690,41 +462,25 @@
     "inputs": [],
     "name": "getUserChats",
     "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "user", "type": "address" }
     ],
     "name": "getUserPosts",
     "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "likePost",
     "outputs": [],
@@ -732,61 +488,23 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "name": "posts",
     "outputs": [
-      {
-        "internalType": "address",
-        "name": "author",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "content",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "ipfsHash",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "timestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "likeCount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "commentCount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "shareCount",
-        "type": "uint256"
-      }
+      { "internalType": "address", "name": "author", "type": "address" },
+      { "internalType": "string", "name": "content", "type": "string" },
+      { "internalType": "string", "name": "ipfsHash", "type": "string" },
+      { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+      { "internalType": "uint256", "name": "likeCount", "type": "uint256" },
+      { "internalType": "uint256", "name": "commentCount", "type": "uint256" },
+      { "internalType": "uint256", "name": "shareCount", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "string",
-        "name": "username",
-        "type": "string"
-      }
+      { "internalType": "string", "name": "username", "type": "string" }
     ],
     "name": "registerUser",
     "outputs": [],
@@ -795,16 +513,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chatId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "content",
-        "type": "string"
-      }
+      { "internalType": "uint256", "name": "chatId", "type": "uint256" },
+      { "internalType": "string", "name": "content", "type": "string" }
     ],
     "name": "sendMessage",
     "outputs": [],
@@ -813,11 +523,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "sharePost",
     "outputs": [],
@@ -826,11 +532,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "userToUnfollow",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "userToUnfollow", "type": "address" }
     ],
     "name": "unfollowUser",
     "outputs": [],
@@ -839,11 +541,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "postId",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "postId", "type": "uint256" }
     ],
     "name": "unlikePost",
     "outputs": [],
@@ -864,30 +562,16 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "users",
     "outputs": [
-      {
-        "internalType": "string",
-        "name": "username",
-        "type": "string"
-      },
+      { "internalType": "string", "name": "username", "type": "string" },
       {
         "internalType": "string",
         "name": "profilePictureHash",
         "type": "string"
       },
-      {
-        "internalType": "bool",
-        "name": "isRegistered",
-        "type": "bool"
-      },
+      { "internalType": "bool", "name": "isRegistered", "type": "bool" },
       {
         "internalType": "uint256",
         "name": "registrationDate",
