@@ -1,7 +1,13 @@
 // src/hooks/useContract.ts
 import { useState, useEffect, useCallback } from "react";
 import { useWeb3 } from "../context/Web3Context";
-import { contractService, type ContractUser, type ContractPost, type ContractComment } from "../lib/contractService";
+import {
+  contractService,
+  type ContractUser,
+  type ContractPost,
+  type ContractComment,
+  type UserProfile,
+} from "../lib/contractService";
 import { isSupportedNetwork } from "../lib/contractConfig";
 
 export const useContract = () => {
@@ -79,28 +85,23 @@ export const useContract = () => {
   );
 
   // User Functions
-  const registerUserOnContract = useCallback(
-    async (username: string) => {
-      return executeTransaction(() => contractService.registerUser(username));
+  const createProfile = useCallback(
+    async (username: string, bio: string = "", profileImageHash?: string) => {
+      return executeTransaction(() =>
+        contractService.createProfile(username, bio, profileImageHash)
+      );
     },
     [executeTransaction]
   );
 
-  const updateUserProfile = useCallback(
-    async (profilePictureHash: string) => {
-      return executeTransaction(() => contractService.updateProfile(profilePictureHash));
-    },
-    [executeTransaction]
-  );
-
-  const getUserInfo = useCallback(
-    async (userAddress: string): Promise<ContractUser | null> => {
+  const getUserProfile = useCallback(
+    async (userAddress: string): Promise<UserProfile | null> => {
       if (!isContractReady) return null;
 
       try {
-        return await contractService.getUserInfo(userAddress);
+        return await contractService.getUserProfile(userAddress);
       } catch (error) {
-        console.error("Error getting user info:", error);
+        console.error("Error getting user profile:", error);
         return null;
       }
     },
@@ -110,7 +111,9 @@ export const useContract = () => {
   // Post Functions
   const createPost = useCallback(
     async (content: string, ipfsHash: string = "") => {
-      return executeTransaction(() => contractService.createPost(content, ipfsHash));
+      return executeTransaction(() =>
+        contractService.createPost(content, ipfsHash)
+      );
     },
     [executeTransaction]
   );
@@ -150,24 +153,30 @@ export const useContract = () => {
     [isContractReady]
   );
 
-  const getTotalPosts = useCallback(
-    async (): Promise<number> => {
-      if (!isContractReady) return 0;
+  const getTotalPosts = useCallback(async (): Promise<number> => {
+    if (!isContractReady) return 0;
 
-      try {
-        return await contractService.getTotalPosts();
-      } catch (error) {
-        console.error("Error getting total posts:", error);
-        return 0;
-      }
-    },
-    [isContractReady]
-  );
+    try {
+      return await contractService.getTotalPosts();
+    } catch (error) {
+      console.error("Error getting total posts:", error);
+      return 0;
+    }
+  }, [isContractReady]);
 
   // Follow Functions
   const followUser = useCallback(
     async (userAddress: string) => {
       return executeTransaction(() => contractService.followUser(userAddress));
+    },
+    [executeTransaction]
+  );
+
+  const unfollowUser = useCallback(
+    async (userAddress: string) => {
+      return executeTransaction(() =>
+        contractService.unfollowUser(userAddress)
+      );
     },
     [executeTransaction]
   );
@@ -207,9 +216,8 @@ export const useContract = () => {
     loading,
 
     // User functions
-    registerUserOnContract,
-    updateUserProfile,
-    getUserInfo,
+    createProfile, // Changed name to match UserContext
+    getUserProfile, // Changed name to match UserContext
 
     // Post functions
     createPost,
@@ -220,6 +228,7 @@ export const useContract = () => {
 
     // Follow functions
     followUser,
+    unfollowUser, // Added missing unfollow function
     getFollowers,
     getFollowing,
 

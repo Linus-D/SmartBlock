@@ -1,0 +1,107 @@
+frontend/
+├─ public/
+│   └─ favicon.svg
+├─ src/
+│  ├─ assets/
+│  │   └─ logo.svg
+│  │
+│  ├─ components/
+│  │   ├─ layout/
+│  │   │   ├─ Header.tsx
+│  │   │   ├─ Footer.tsx
+│  │   │   └─ Sidebar.tsx
+│  │   ├─ ui/
+│  │   │   ├─ Button.tsx
+│  │   │   ├─ Input.tsx
+│  │   │   ├─ Modal.tsx
+│  │   │   ├─ LoadingSpinner.tsx
+│  │   │   └─ CharacterCounter.tsx
+│  │   ├─ social/              # NEW: Social media specific components
+│  │   │   ├─ PostCard.tsx
+│  │   │   ├─ CommentSection.tsx
+│  │   │   ├─ LikeButton.tsx
+│  │   │   ├─ FollowButton.tsx
+│  │   │   ├─ UserSearch.tsx
+│  │   │   └─ MessageBubble.tsx
+│  │   ├─ modals/              # NEW: Modal components
+│  │   │   ├─ PostDetailModal.tsx
+│  │   │   ├─ ProfileEditModal.tsx
+│  │   │   └─ IPFSUploadModal.tsx
+│  │   └─ three/
+│  │       ├─ Scene.tsx
+│  │       └─ Avatar3D.tsx     # NEW: 3D avatars
+│  │
+│  ├─ context/
+│  │   ├─ Web3Context.tsx      # UPDATED: Replace AuthContext
+│  │   ├─ UserContext.tsx      # NEW: User profile state
+│  │   └─ ThemeContext.tsx
+│  │
+│  ├─ hooks/
+│  │   ├─ useWallet.ts         # UPDATED: Web3 wallet connection
+│  │   ├─ useContract.ts       # NEW: Smart contract interactions
+│  │   ├─ useIPFS.ts          # NEW: IPFS file upload/retrieval
+│  │   ├─ usePosts.ts         # NEW: Post management
+│  │   └─ useDarkMode.ts
+│  │
+│  ├─ lib/
+│  │   ├─ web3.ts             # UPDATED: Web3/Ethers setup
+│  │   ├─ contract.ts         # NEW: Contract ABI and functions
+│  │   ├─ ipfs.ts             # NEW: IPFS configuration
+│  │   └─ utils.ts            # NEW: Helper functions
+│  │
+│  ├─ types/                  # NEW: TypeScript interfaces
+│  │   ├─ contract.ts         # Smart contract types
+│  │   ├─ user.ts            # User-related types
+│  │   └─ post.ts            # Post-related types
+│  │
+│  ├─ pages/
+│  │   ├─ Welcome.tsx
+│  │   ├─ Connect.tsx         # UPDATED: Wallet connection page
+│  │   ├─ Feed.tsx
+│  │   ├─ Profile.tsx
+│  │   ├─ Messages.tsx        # NEW: Direct messages
+│  │   └─ Explore.tsx         # NEW: Discover users/posts
+│  │
+│  ├─ routes/
+│  │   └─ PrivateRoute.tsx    # Check wallet connection instead
+│  │
+│  ├─ styles/
+│  │   └─ globals.css
+│  │
+│  ├─ constants/              # NEW: App constants
+│  │   └─ contract.ts         # Contract address and ABI
+│  │
+│  ├─ App.tsx
+│  ├─ main.tsx
+│  └─ vite-env.d.ts
+│
+├─ .env                       # VITE_CONTRACT_ADDRESS, VITE_IPFS_*, etc.
+├─ index.html
+├─ package.json
+├─ tailwind.config.cjs
+└─ tsconfig.json
+
+
+
+# Smart Contract
+VITE_CONTRACT_ADDRESS=
+VITE_CHAIN_ID=11155111  # Sepolia testnet
+
+# IPFS 
+VITE_IPFS_PROJECT_ID=
+VITE_IPFS_PROJECT_SECRET=
+VITE_IPFS_GATEWAY=https://ipfs.io/ipfs/
+
+# Using Pinata for IPFS
+VITE_PINATA_API_KEY=your_pinata_api_key
+VITE_PINATA_SECRET_KEY=your_pinata_secret_key
+
+# Optional: Custom RPC
+VITE_RPC_URL=
+
+
+Step 1: Update Web3Context.tsx
+
+Step 2: Update UserContext.tsx
+
+Step 3: Update useContract.ts

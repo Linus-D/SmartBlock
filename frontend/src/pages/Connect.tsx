@@ -1,5 +1,5 @@
 // src/pages/Connect.tsx
-import React, { useState, useEffect } from "react"; // Import useEffect
+import React, { useState, useEffect } from "react";
 import { Wallet, AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { useWeb3 } from "../context/Web3Context";
 import { useUser } from "../context/UserContext";
@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const Connect: React.FC = () => {
   const {
-    account, // account is not currently used in the JSX, but good to have
+    account,
     chainId,
     isConnected,
     isConnecting,
@@ -22,23 +22,32 @@ const Connect: React.FC = () => {
 
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
-  // showUsernameForm state is managed internally by the conditions below,
-  // so it might not be strictly necessary to manage it as a separate state
-  // unless you have more complex UI transitions. For now, we'll rely on
-  // the conditions for rendering.
 
-  // Get targetChainId from environment variables, default to Sepolia if not set
   const targetChainId = parseInt(import.meta.env.VITE_CHAIN_ID || "11155111");
   const isCorrectNetwork = chainId === targetChainId;
 
   // --- Event Handlers ---
   const handleConnectWallet = async () => {
+    // Check if the connection is already in progress
+    if (isConnecting) return;
+
     try {
       await connectWallet();
     } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      // You might want to show a user-facing error message here too
-      alert("Failed to connect wallet. Please try again.");
+      // Check for the specific MetaMask "Already processing" error
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === -32002
+      ) {
+        alert(
+          "MetaMask is already processing a request. Please check your extension window to approve or reject the connection."
+        );
+      } else {
+        console.error("Failed to connect wallet:", error);
+        alert("Failed to connect wallet. Please try again.");
+      }
     }
   };
 
@@ -53,7 +62,7 @@ const Connect: React.FC = () => {
     setIsRegistering(true);
     try {
       await registerUser(username);
-      // The navigation will be handled by the useEffect below once currentUser.isRegistered is true
+      // navigation handled by useEffect below
     } catch (error) {
       console.error("Registration failed:", error);
       alert("Registration failed. Please try again.");
@@ -63,15 +72,11 @@ const Connect: React.FC = () => {
   };
 
   // --- Side Effects ---
-  // Redirect if user is already connected and registered, or if registration is complete
   useEffect(() => {
     if (isConnected && !userLoading && currentUser?.isRegistered) {
       navigate("/feed");
     }
-    // If user is connected, not loading, and has just registered (indicated by username state and registration success)
-    // The registerUser function should ideally return success or update state that currentUser.isRegistered becomes true.
-    // We rely on currentUser.isRegistered becoming true after a successful registerUser call.
-  }, [isConnected, userLoading, currentUser?.isRegistered, navigate]); // Depend on these values
+  }, [isConnected, userLoading, currentUser?.isRegistered, navigate]);
 
   // --- JSX Rendering ---
   return (
@@ -86,13 +91,11 @@ const Connect: React.FC = () => {
         </h1>
 
         {userLoading ? (
-          // Loading state for user data
           <div className="flex items-center justify-center space-x-2 text-gray-500 dark:text-gray-400">
             <Loader className="animate-spin" size={20} />
             <span>Initializing connection...</span>
           </div>
         ) : !isConnected ? (
-          // State: Wallet not connected
           <Button
             onClick={handleConnectWallet}
             disabled={isConnecting}
@@ -102,16 +105,13 @@ const Connect: React.FC = () => {
             Connect Wallet
           </Button>
         ) : (
-          // State: Wallet is connected
           <div className="space-y-4">
             {isCorrectNetwork ? (
-              // State: Wallet connected to the correct network
               <div className="text-green-500 flex items-center justify-center space-x-2">
                 <CheckCircle size={20} />
                 <span>Wallet Connected to Sepolia</span>
               </div>
             ) : (
-              // State: Wallet connected but on the wrong network
               <div className="text-red-500 space-y-2">
                 <div className="flex items-center justify-center space-x-2">
                   <AlertCircle size={20} />
@@ -126,7 +126,6 @@ const Connect: React.FC = () => {
               </div>
             )}
 
-            {/* Show username form if connected to correct network and user is not registered */}
             {isCorrectNetwork &&
               !userLoading &&
               currentUser &&
@@ -147,7 +146,7 @@ const Connect: React.FC = () => {
                     />
                     <Button
                       type="submit"
-                      disabled={!username || isRegistering} // Disable if username is empty or registering
+                      disabled={!username || isRegistering}
                       loading={isRegistering}
                       className="w-full"
                     >
@@ -157,7 +156,6 @@ const Connect: React.FC = () => {
                 </div>
               )}
 
-            {/* Message if user is connected, on correct network, and already registered */}
             {isCorrectNetwork && !userLoading && currentUser?.isRegistered && (
               <div className="text-green-500 flex items-center justify-center space-x-2">
                 <CheckCircle size={20} />
