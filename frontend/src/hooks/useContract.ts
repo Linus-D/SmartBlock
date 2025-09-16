@@ -1,220 +1,229 @@
 // src/hooks/useContract.ts
-import { useCallback, useMemo } from "react";
-import { ethers } from "ethers";
-import contractJson from "../constants/contract.json";
+import { useState, useEffect, useCallback } from "react";
 import { useWeb3 } from "../context/Web3Context";
+import { contractService, type ContractUser, type ContractPost, type ContractComment } from "../lib/contractService";
+import { isSupportedNetwork } from "../lib/contractConfig";
 
-/**
- * Environment
- */
-const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as string;
+export const useContract = () => {
+  const { provider, signer, account, chainId, isConnected } = useWeb3();
+  const [isContractReady, setIsContractReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-export interface TxState<T = any> {
-  loading: boolean;
-  error: string | null;
-  data?: T;
-}
-
-/**
- * Hook: useContract
- * Provides ready-to-use methods for user, post, comment & messaging features.
- */
-export function useContract() {
-  const { provider, signer } = useWeb3();
-
-  // This hook is always called, so it's a valid use of useMemo.
-  const contract = useMemo(() => {
-    if (!provider || !signer) return null;
-    return new ethers.Contract(contractAddress, contractJson.abi, signer);
-  }, [provider, signer]);
-
-  /**
-   * Generic helper for write transactions with state management
-   */
-  const runTx = useCallback(
-    async <T>(fn: () => Promise<T>): Promise<TxState<T>> => {
-      const state: TxState<T> = { loading: true, error: null };
-      try {
-        const result = await fn();
-        state.data = result;
-      } catch (err: any) {
-        console.error("Contract call failed:", err);
-        state.error = err?.message ?? "Transaction failed";
-      } finally {
-        state.loading = false;
+  // Initialize contract when wallet is connected
+  useEffect(() => {
+    if (isConnected && provider && chainId) {
+      if (!isSupportedNetwork(chainId)) {
+        setError(`Unsupported network. Please switch to a supported network.`);
+        setIsContractReady(false);
+        return;
       }
-      return state;
+
+      try {
+        if (signer) {
+          contractService.initializeWithSigner(signer);
+        } else {
+          contractService.initializeWithProvider(provider);
+        }
+        setIsContractReady(true);
+        setError(null);
+      } catch (err: any) {
+        setError(`Failed to initialize contract: ${err.message}`);
+        setIsContractReady(false);
+      }
+    } else {
+      setIsContractReady(false);
+      if (!isConnected) {
+        setError(null); // Clear error when disconnected
+      }
+    }
+  }, [isConnected, provider, signer, chainId]);
+
+  // Generic transaction wrapper
+  const executeTransaction = useCallback(
+    async <T>(
+      transactionFn: () => Promise<T>,
+      onSuccess?: (result: T) => void,
+      onError?: (error: string) => void
+    ): Promise<{
+      success: boolean;
+      data?: T;
+      error?: string;
+    }> => {
+      if (!isContractReady) {
+        const error = "Contract not initialized";
+        onError?.(error);
+        return { success: false, error };
+      }
+
+      if (!account) {
+        const error = "Wallet not connected";
+        onError?.(error);
+        return { success: false, error };
+      }
+
+      setLoading(true);
+      try {
+        const result = await transactionFn();
+        onSuccess?.(result);
+        return { success: true, data: result };
+      } catch (err: any) {
+        const error = err.message || "Transaction failed";
+        onError?.(error);
+        return { success: false, error };
+      } finally {
+        setLoading(false);
+      }
     },
-    []
+    [isContractReady, account]
   );
 
-  /**
-   * USER MANAGEMENT
-   * These useCallback hooks are now called unconditionally, fixing the order issue.
-   */
-  const registerUser = useCallback(
-    (username: string, profileCID: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.registerUser(username, profileCID));
+  // User Functions
+  const registerUserOnContract = useCallback(
+    async (username: string) => {
+      return executeTransaction(() => contractService.registerUser(username));
     },
-    [contract, runTx]
+    [executeTransaction]
   );
 
-  const updateProfile = useCallback(
-    (username: string, profileCID: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.updateProfile(username, profileCID));
+  const updateUserProfile = useCallback(
+    async (profilePictureHash: string) => {
+      return executeTransaction(() => contractService.updateProfile(profilePictureHash));
     },
-    [contract, runTx]
+    [executeTransaction]
   );
 
-  const getUser = useCallback(
-    (address: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.getUser(address));
+  const getUserInfo = useCallback(
+    async (userAddress: string): Promise<ContractUser | null> => {
+      if (!isContractReady) return null;
+
+      try {
+        return await contractService.getUserInfo(userAddress);
+      } catch (error) {
+        console.error("Error getting user info:", error);
+        return null;
+      }
     },
-    [contract, runTx]
+    [isContractReady]
   );
 
-  /**
-   * SOCIAL GRAPH
-   */
-  const followUser = useCallback(
-    (userAddr: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.follow(userAddr));
-    },
-    [contract, runTx]
-  );
-
-  const unfollowUser = useCallback(
-    (userAddr: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.unfollow(userAddr));
-    },
-    [contract, runTx]
-  );
-
-  const getFollowers = useCallback(
-    (userAddr: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.getFollowers(userAddr));
-    },
-    [contract, runTx]
-  );
-
-  const getFollowing = useCallback(
-    (userAddr: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.getFollowing(userAddr));
-    },
-    [contract, runTx]
-  );
-
-  /**
-   * POST MANAGEMENT
-   */
+  // Post Functions
   const createPost = useCallback(
-    (contentCID: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.createPost(contentCID));
+    async (content: string, ipfsHash: string = "") => {
+      return executeTransaction(() => contractService.createPost(content, ipfsHash));
     },
-    [contract, runTx]
+    [executeTransaction]
+  );
+
+  const getPost = useCallback(
+    async (postId: number): Promise<ContractPost | null> => {
+      if (!isContractReady) return null;
+
+      try {
+        return await contractService.getPost(postId);
+      } catch (error) {
+        console.error("Error getting post:", error);
+        return null;
+      }
+    },
+    [isContractReady]
   );
 
   const likePost = useCallback(
-    (postId: number) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.likePost(postId));
+    async (postId: number) => {
+      return executeTransaction(() => contractService.likePost(postId));
     },
-    [contract, runTx]
+    [executeTransaction]
   );
 
-  const unlikePost = useCallback(
-    (postId: number) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.unlikePost(postId));
+  const getUserPosts = useCallback(
+    async (userAddress: string): Promise<number[]> => {
+      if (!isContractReady) return [];
+
+      try {
+        return await contractService.getUserPosts(userAddress);
+      } catch (error) {
+        console.error("Error getting user posts:", error);
+        return [];
+      }
     },
-    [contract, runTx]
+    [isContractReady]
   );
 
-  const sharePost = useCallback(
-    (postId: number) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.sharePost(postId));
+  const getTotalPosts = useCallback(
+    async (): Promise<number> => {
+      if (!isContractReady) return 0;
+
+      try {
+        return await contractService.getTotalPosts();
+      } catch (error) {
+        console.error("Error getting total posts:", error);
+        return 0;
+      }
     },
-    [contract, runTx]
+    [isContractReady]
   );
 
-  const getPosts = useCallback(() => {
-    if (!contract) return { loading: false, error: "Wallet not connected" };
-    return runTx(() => contract.getAllPosts());
-  }, [contract, runTx]);
-
-  /**
-   * COMMENTS
-   */
-  const addComment = useCallback(
-    (postId: number, contentCID: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.addComment(postId, contentCID));
+  // Follow Functions
+  const followUser = useCallback(
+    async (userAddress: string) => {
+      return executeTransaction(() => contractService.followUser(userAddress));
     },
-    [contract, runTx]
+    [executeTransaction]
   );
 
-  const getComments = useCallback(
-    (postId: number) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.getComments(postId));
+  const getFollowers = useCallback(
+    async (userAddress: string): Promise<string[]> => {
+      if (!isContractReady) return [];
+
+      try {
+        return await contractService.getFollowers(userAddress);
+      } catch (error) {
+        console.error("Error getting followers:", error);
+        return [];
+      }
     },
-    [contract, runTx]
+    [isContractReady]
   );
 
-  /**
-   * MESSAGING
-   */
-  const createChat = useCallback(
-    (recipient: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.createChat(recipient));
-    },
-    [contract, runTx]
-  );
+  const getFollowing = useCallback(
+    async (userAddress: string): Promise<string[]> => {
+      if (!isContractReady) return [];
 
-  const sendMessage = useCallback(
-    (chatId: number, messageCID: string) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.sendMessage(chatId, messageCID));
+      try {
+        return await contractService.getFollowing(userAddress);
+      } catch (error) {
+        console.error("Error getting following:", error);
+        return [];
+      }
     },
-    [contract, runTx]
-  );
-
-  const getMessages = useCallback(
-    (chatId: number) => {
-      if (!contract) return { loading: false, error: "Wallet not connected" };
-      return runTx(() => contract.getMessages(chatId));
-    },
-    [contract, runTx]
+    [isContractReady]
   );
 
   return {
-    contract,
-    registerUser,
-    updateProfile,
-    getUser,
+    // State
+    isContractReady,
+    error,
+    loading,
+
+    // User functions
+    registerUserOnContract,
+    updateUserProfile,
+    getUserInfo,
+
+    // Post functions
+    createPost,
+    getPost,
+    getUserPosts,
+    getTotalPosts,
+    likePost,
+
+    // Follow functions
     followUser,
-    unfollowUser,
     getFollowers,
     getFollowing,
-    createPost,
-    likePost,
-    unlikePost,
-    sharePost,
-    getPosts,
-    addComment,
-    getComments,
-    createChat,
-    sendMessage,
-    getMessages,
+
+    // Generic transaction executor
+    executeTransaction,
   };
-}
+};

@@ -18,8 +18,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { account, isConnected } = useWeb3();
-  const { getUserInfo, registerUserOnContract, updateUserProfile } =
-    useContract();
+  const {
+    getUserInfo,
+    registerUserOnContract,
+    updateUserProfile,
+    getFollowers,
+    getFollowing,
+    getUserPosts
+  } = useContract();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,20 +43,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsLoading(true);
     try {
       const userInfo = await getUserInfo(account);
-      setCurrentUser({
-        address: account,
-        username: userInfo.username || "",
-        profilePictureHash: userInfo.profilePictureHash || "",
-        isRegistered: userInfo.isRegistered || false,
-        postCount: Number(userInfo.postCount) || 0,
-        followerCount: Number(userInfo.followerCount) || 0,
-        followingCount: Number(userInfo.followingCount) || 0,
-      });
+      if (userInfo) {
+        // Get follower and following counts
+        const followers = await getFollowers(account);
+        const following = await getFollowing(account);
+        const userPosts = await getUserPosts(account);
+
+        setCurrentUser({
+          address: account,
+          username: userInfo.username || "",
+          profilePictureHash: userInfo.profilePictureHash || "",
+          isRegistered: userInfo.isRegistered || false,
+          postCount: userPosts.length || 0,
+          followerCount: followers.length || 0,
+          followingCount: following.length || 0,
+        });
+      } else {
+        // User not found, set as unregistered
+        setCurrentUser({
+          address: account,
+          username: "",
+          profilePictureHash: "",
+          isRegistered: false,
+          postCount: 0,
+          followerCount: 0,
+          followingCount: 0,
+        });
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
       setCurrentUser({
         address: account,
         username: "",
+        profilePictureHash: "",
         isRegistered: false,
         postCount: 0,
         followerCount: 0,

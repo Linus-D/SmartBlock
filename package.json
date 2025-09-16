@@ -1,0 +1,49 @@
+{
+  "name": "smartblock",
+  "version": "1.0.0",
+  "description": "Decentralized Social Media Platform built on Ethereum",
+  "main": "setup.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "verify": "node verify-setup.js",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "install-backend": "cd Project_Backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "compile": "cd Project_Backend && npm run compile",
+    "test": "cd Project_Backend && npm run test",
+    "dev:network": "cd Project_Backend && npm run node",
+    "dev:deploy": "cd Project_Backend && npm run deploy:local",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:network\" \"npm run dev:deploy\" \"npm run dev:frontend\"",
+    "build": "cd frontend && npm run build",
+    "deploy:sepolia": "cd Project_Backend && npm run deploy:sepolia",
+    "clean": "cd Project_Backend && npm run clean"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "social-media",
+    "decentralized",
+    "web3",
+    "dapp",
+    "react",
+    "hardhat",
+    "solidity"
+  ],
+  "author": "SmartBlock Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/smartblock.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "workspaces": [
+    "Project_Backend",
+    "frontend",
+    "ai-engine",
+    "server"
+  ]
+}

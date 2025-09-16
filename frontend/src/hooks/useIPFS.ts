@@ -1,242 +1,118 @@
-// src/hooks/useIPFS.ts
-import { useState } from "react";
-import { uploadToIPFS, uploadJSONToIPFS, getIPFSUrl } from "../lib/ipfs";
+import { useState, useCallback } from 'react';
+import { ipfsService, IPFSFile } from '../lib/ipfs';
 
 interface UploadProgress {
-  loaded: number;
-  total: number;
-  percentage: number;
+  file: string;
+  progress: number;
+  status: 'idle' | 'uploading' | 'completed' | 'error';
+  error?: string;
 }
 
-export const useIPFS = () => {
+interface UseIPFSReturn {
+  // Upload functions
+  uploadFile: (file: File, metadata?: Record<string, any>) => Promise<IPFSFile>;
+  uploadJSON: (data: any, name?: string) => Promise<IPFSFile>;
+  uploadAvatar: (file: File) => Promise<IPFSFile>;
+  uploadPostMedia: (files: File[]) => Promise<IPFSFile[]>;
+  uploadPostMetadata: (content: any) => Promise<IPFSFile>;
+  uploadProfileMetadata: (profile: any) => Promise<IPFSFile>;
+
+  // Retrieval functions
+  getData: <T = any>(hash: string) => Promise<T>;
+  getFileUrl: (hash: string) => string;
+
+  // State
+  isUploading: boolean;
+  uploadProgress: UploadProgress[];
+  error: string | null;
+
+  // Configuration
+  isConfigured: boolean;
+  testConnection: () => Promise<boolean>;
+}
+
+export const useIPFS = (): UseIPFSReturn => {
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFile = async (file: File): Promise<string> => {
-    if (!file) {
-      throw new Error("No file provided");
-    }
-
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-    if (file.size > maxSize) {
-      throw new Error("File size exceeds 50MB limit");
-    }
-
-    // Validate file type
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "audio/mpeg",
-      "audio/wav",
-      "application/pdf",
-      "text/plain",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error(`File type ${file.type} is not supported`);
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    setError(null);
-
-    try {
-      // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 200);
-
-      // Upload to IPFS
-      const hash = await uploadToIPFS(file);
-
-      // Complete progress
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      console.log("File uploaded to IPFS successfully:", hash);
-      return hash;
-    } catch (error: any) {
-      console.error("Error uploading file to IPFS:", error);
-      setError(error.message || "Failed to upload file to IPFS");
-      throw error;
-    } finally {
-      setIsUploading(false);
-      // Reset progress after a delay
-      setTimeout(() => setUploadProgress(0), 2000);
-    }
-  };
-
-  const uploadJSON = async (data: object): Promise<string> => {
-    if (!data || typeof data !== "object") {
-      throw new Error("Invalid data provided");
-    }
-
-    setIsUploading(true);
-    setError(null);
-
-    try {
-      setUploadProgress(50); // Simulate progress
-      const hash = await uploadJSONToIPFS(data);
-      setUploadProgress(100);
-
-      console.log("JSON uploaded to IPFS successfully:", hash);
-      return hash;
-    } catch (error: any) {
-      console.error("Error uploading JSON to IPFS:", error);
-      setError(error.message || "Failed to upload JSON to IPFS");
-      throw error;
-    } finally {
-      setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 2000);
-    }
-  };
-
-  const uploadMultipleFiles = async (files: File[]): Promise<string[]> => {
-    if (!files || files.length === 0) {
-      throw new Error("No files provided");
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    setError(null);
-
-    try {
-      const hashes: string[] = [];
-      const totalFiles = files.length;
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        // Update progress
-        const baseProgress = (i / totalFiles) * 100;
-        setUploadProgress(baseProgress);
-
-        try {
-          const hash = await uploadToIPFS(file);
-          hashes.push(hash);
-
-          // Update progress for completed file
-          setUploadProgress(((i + 1) / totalFiles) * 100);
-        } catch (fileError) {
-          console.error(`Error uploading file ${file.name}:`, fileError);
-          // Continue with other files, but log the error
-        }
+  const updateProgress = useCallback((fileName: string, progress: Partial<UploadProgress>) => {
+    setUploadProgress(prev => {
+      const existingIndex = prev.findIndex(p => p.file === fileName);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], ...progress };
+        return updated;
+      } else {
+        return [...prev, { file: fileName, progress: 0, status: 'idle', ...progress }];
       }
+    });
+  }, []);
 
-      console.log("Multiple files uploaded successfully:", hashes);
-      return hashes;
-    } catch (error: any) {
-      console.error("Error uploading multiple files:", error);
-      setError(error.message || "Failed to upload files");
-      throw error;
+  const clearProgress = useCallback((fileName?: string) => {
+    if (fileName) {
+      setUploadProgress(prev => prev.filter(p => p.file !== fileName));
+    } else {
+      setUploadProgress([]);
+    }
+  }, []);
+
+  const uploadFile = useCallback(async (
+    file: File, 
+    metadata?: Record<string, any>
+  ): Promise<IPFSFile> => {
+    setIsUploading(true);
+    setError(null);
+    updateProgress(file.name, { status: 'uploading', progress: 0 });
+
+    try {
+      const result = await ipfsService.uploadFile(file, metadata);
+      updateProgress(file.name, { status: 'completed', progress: 100 });
+      
+      // Clear progress after a short delay
+      setTimeout(() => clearProgress(file.name), 2000);
+      
+      return result;
+    } catch (err: any) {
+      const errorMsg = err.message || 'Upload failed';
+      setError(errorMsg);
+      updateProgress(file.name, { status: 'error', error: errorMsg });
+      throw err;
     } finally {
       setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 2000);
     }
-  };
+  }, [updateProgress, clearProgress]);
 
-  const getFileUrl = (hash: string, gateway?: string): string => {
-    if (!hash) return "";
-
-    const customGateway = gateway || import.meta.env.VITE_IPFS_GATEWAY;
-
-    if (customGateway) {
-      return `${customGateway}${hash}`;
-    }
-
-    return getIPFSUrl(hash);
-  };
-
-  const validateFile = (file: File): { isValid: boolean; error?: string } => {
-    // Check file size
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-      return {
-        isValid: false,
-        error: "File size exceeds 50MB limit",
-      };
-    }
-
-    // Check file type
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "audio/mpeg",
-      "audio/wav",
-      "application/pdf",
-      "text/plain",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return {
-        isValid: false,
-        error: `File type ${file.type} is not supported`,
-      };
-    }
-
-    return { isValid: true };
-  };
-
-  const getFileType = (
-    file: File
-  ): "image" | "video" | "audio" | "document" | "other" => {
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    if (file.type.startsWith("audio/")) return "audio";
-    if (file.type === "application/pdf" || file.type === "text/plain")
-      return "document";
-    return "other";
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const clearError = () => {
+  const uploadJSON = useCallback(async (
+    data: any, 
+    name?: string
+  ): Promise<IPFSFile> => {
+    setIsUploading(true);
     setError(null);
-  };
+    const fileName = name || 'JSON Data';
+    updateProgress(fileName, { status: 'uploading', progress: 50 });
 
-  // Return all functions and state
-  return {
-    // Upload functions
-    uploadFile,
-    uploadJSON,
-    uploadMultipleFiles,
+    try {
+      const result = await ipfsService.uploadJSON(data, name);
+      updateProgress(fileName, { status: 'completed', progress: 100 });
+      
+      setTimeout(() => clearProgress(fileName), 2000);
+      
+      return result;
+    } catch (err: any) {
+      const errorMsg = err.message || 'JSON upload failed';
+      setError(errorMsg);
+      updateProgress(fileName, { status: 'error', error: errorMsg });
+      throw err;
+    } finally {
+      setIsUploading(false);
+    }
+  }, [updateProgress, clearProgress]);
 
-    // Utility functions
-    getFileUrl,
-    validateFile,
-    getFileType,
-    formatFileSize,
-    clearError,
-
-    // State
-    isUploading,
-    uploadProgress,
-    error,
-  };
-};
+  const uploadAvatar = useCallback(async (file: File): Promise<IPFSFile> => {
+    return uploadFile(file, {
+      category: 'avatar',
+      type: 'profile-image',
+      name: `Avatar-${Date.now()}`,
+    });
+  }, [

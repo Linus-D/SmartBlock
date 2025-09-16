@@ -31,26 +31,60 @@ async function main() {
     deployedAt: new Date().toISOString(),
   };
 
-  // Ensure frontend/constants directory exists
-  const constantsDir = path.join(__dirname, "../frontend/constants");
-  if (!fs.existsSync(constantsDir)) {
-    fs.mkdirSync(constantsDir, { recursive: true });
+  // Ensure frontend constants directories exist
+  const backendConstantsDir = path.join(__dirname, "../frontend/constants");
+  const frontendConstantsDir = path.join(__dirname, "../../frontend/src/constants");
+
+  if (!fs.existsSync(backendConstantsDir)) {
+    fs.mkdirSync(backendConstantsDir, { recursive: true });
+  }
+  if (!fs.existsSync(frontendConstantsDir)) {
+    fs.mkdirSync(frontendConstantsDir, { recursive: true });
   }
 
-  // Save deployment info to JSON file
-  const deploymentPath = path.join(constantsDir, "deployment.json");
+  // Save deployment info to backend constants directory
+  const deploymentPath = path.join(backendConstantsDir, "deployment.json");
   fs.writeFileSync(deploymentPath, JSON.stringify(deploymentInfo, null, 2));
-  console.log(`Deployment info saved to: ${deploymentPath}`);
+  console.log(`Backend deployment info saved to: ${deploymentPath}`);
 
-  // Also save ABI separately for easier frontend integration
-  const abiPath = path.join(constantsDir, "abi.json");
+  // Also save ABI separately for backend integration
+  const abiPath = path.join(backendConstantsDir, "abi.json");
   fs.writeFileSync(abiPath, JSON.stringify(abi, null, 2));
-  console.log(`ABI saved to: ${abiPath}`);
+  console.log(`Backend ABI saved to: ${abiPath}`);
 
-  // Save contract address separately
-  const addressPath = path.join(constantsDir, "contractAddress.json");
+  // Save contract address separately for backend
+  const addressPath = path.join(backendConstantsDir, "contractAddress.json");
   fs.writeFileSync(addressPath, JSON.stringify({ address: contractAddress }, null, 2));
-  console.log(`Contract address saved to: ${addressPath}`);
+  console.log(`Backend contract address saved to: ${addressPath}`);
+
+  // Save deployment info to frontend constants directory
+  const frontendDeploymentPath = path.join(frontendConstantsDir, "deployment.json");
+  fs.writeFileSync(frontendDeploymentPath, JSON.stringify(deploymentInfo, null, 2));
+  console.log(`Frontend deployment info saved to: ${frontendDeploymentPath}`);
+
+  // Create frontend environment config
+  const frontendEnvPath = path.join(__dirname, "../../frontend/.env.local");
+  const envContent = `# Auto-generated deployment configuration
+VITE_CONTRACT_ADDRESS=${contractAddress}
+VITE_CHAIN_ID=${deploymentInfo.chainId}
+VITE_NETWORK_NAME=${deploymentInfo.network}
+VITE_DEPLOYED_AT=${deploymentInfo.deployedAt}
+
+# Add your RPC URLs and API keys
+VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
+VITE_LOCALHOST_RPC_URL=http://localhost:8545
+
+# IPFS Configuration (Optional)
+VITE_IPFS_GATEWAY=https://ipfs.io/ipfs/
+VITE_PINATA_API_KEY=
+VITE_PINATA_SECRET_KEY=
+
+# Development
+VITE_DEBUG=true
+`;
+
+  fs.writeFileSync(frontendEnvPath, envContent);
+  console.log(`Frontend environment config saved to: ${frontendEnvPath}`);
 
   console.log("\n=== Deployment Summary ===");
   console.log(`Contract Address: ${contractAddress}`);
