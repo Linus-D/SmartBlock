@@ -1,6 +1,6 @@
 # SmartBlock - Decentralized Social Media Platform
 
-SmartBlock is a decentralized social media platform built on Ethereum that enables users to create posts, interact with content, follow other users, and chat - all while maintaining ownership of their data through blockchain technology.
+A full-stack decentralized social media platform built with React, TypeScript, and Ethereum smart contracts. Features a revolutionary dual data system that seamlessly switches between mock data for development and real blockchain data for production, enabling rapid development without compromising production readiness.
 
 ## 🏗️ Architecture Overview
 
@@ -14,9 +14,10 @@ SmartBlock/
 ├── frontend/               # React frontend application
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
-│   │   ├── context/        # React context providers
+│   │   ├── context/        # React context providers (Web3, User)
+│   │   ├── data/           # Mock data for development
 │   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Utility libraries
+│   │   ├── lib/            # Utility libraries and data services
 │   │   ├── pages/          # Application pages
 │   │   └── types/          # TypeScript type definitions
 │   └── package.json
@@ -31,21 +32,44 @@ SmartBlock/
 
 - Node.js 18+ and npm
 - Git
-- MetaMask or compatible Web3 wallet
+- MetaMask or compatible Web3 wallet (optional for mock mode)
 
-### Automatic Setup
+### 🎯 Data Modes
 
-Run the automated setup script:
+SmartBlock supports three data modes for different development and deployment scenarios:
 
+#### 1. Mock Mode (`VITE_DATA_MODE=mock`) - **Recommended for Development**
+- ✅ Uses simulated data without blockchain
+- ✅ No wallet connection required
+- ✅ Instant startup and fast iteration
+- ✅ Perfect for UI development and testing
+
+#### 2. Real Mode (`VITE_DATA_MODE=real`)
+- 🔗 Uses actual smart contracts and blockchain
+- 🔗 Requires deployed contracts and wallet connection
+- 🔗 Production-ready mode
+
+#### 3. Auto Mode (`VITE_DATA_MODE=auto`) - **Default**
+- 🤖 Automatically switches between mock and real based on:
+  - Wallet connection status
+  - Contract availability
+  - Network conditions
+
+### Quick Start Options
+
+#### Option A: Mock Development (No Blockchain Required)
 ```bash
-node setup.js
-```
+# Clone and install
+git clone <repository-url>
+cd SmartBlock/frontend
+npm install
 
-This will:
-- Install all dependencies
-- Compile smart contracts
-- Set up environment files
-- Provide next steps for deployment
+# Start with mock data
+npm run dev
+```
+Visit `http://localhost:5173` - No wallet required!
+
+#### Option B: Full Blockchain Development
 
 ### Manual Setup
 

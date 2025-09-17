@@ -33,4 +33,27 @@ export const PostCard: React.FC<PostCardProps> = ({
       await handleLikePost(post.id);
       setLiked(!liked);
     } catch (error) {
-      console.
+      console.error('Error liking post:', error);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+      {/* Post content will go here */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleLike}
+            disabled={isLiking}
+            className={`flex items-center space-x-1 ${liked ? 'text-red-500' : 'text-gray-500'} hover:text-red-500`}
+          >
+            <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+            <span>{post.likes || 0}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

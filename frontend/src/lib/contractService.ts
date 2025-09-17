@@ -1,14 +1,7 @@
 // src/lib/contractService.ts
 import { ethers } from "ethers";
 import { CONTRACT_CONFIG } from "./contractConfig";
-
-// Updated UserProfile interface to match the Solidity struct
-export interface UserProfile {
-  username: string;
-  profilePictureHash: string;
-  isRegistered: boolean;
-  registrationDate: number;
-}
+import type { UserProfile, Post } from "../types/contract";
 
 export interface ContractPost {
   author: string;
@@ -100,50 +93,82 @@ export class SocialMediaContractService {
     return this.signer;
   }
 
-  // User Management Functions
-  // *** IMPORTANT CHANGE HERE ***
-  // Renamed getUserProfile to call the Solidity mapping 'users' directly
-  public async getUserProfile(address: string): Promise<UserProfile> {
+  // --- User Management Functions ---
+
+  /**
+   * Fetches user profile data from the contract.
+   * Uses the public 'users' mapping getter on the contract.
+   * @param address The user's wallet address.
+   * @returns A Promise resolving to the UserProfile object, or an empty object if not registered.
+   */
+  public async getUserProfile(address: string): Promise<UserProfile | null> {
     const contract = this.ensureContract();
-    // Directly call the 'users' mapping which returns the User struct
+    // Directly call the 'users' mapping which acts as a getter function
     const userInfo = await contract.users(address);
-    return {
-      username: userInfo.username,
-      profilePictureHash: userInfo.profilePictureHash,
-      isRegistered: userInfo.isRegistered,
-      registrationDate: Number(userInfo.registrationDate),
-    };
+
+    // Check if the user is actually registered on the contract
+    if (userInfo.isRegistered) {
+      return {
+        username: userInfo.username,
+        profilePictureHash: userInfo.profilePictureHash,
+        isRegistered: userInfo.isRegistered,
+        registrationDate: Number(userInfo.registrationDate),
+      };
+    } else {
+      // User is not registered, return null to indicate this.
+      return null;
+    }
   }
 
-  // Renamed registerUser to createProfile to match UserContext.tsx
+  /**
+   * Registers a new user on the blockchain.
+   * This function aligns with the 'createProfile' logic needed for sign-up.
+   * It attempts to call 'createProfile' first, and falls back to 'registerUser' if 'createProfile' doesn't exist.
+   * @param username The desired username for the new profile.
+   * @param bio Optional bio for the user.
+   * @param profileImageHash Optional hash for the user's profile picture.
+   * @returns A Promise resolving to the transaction hash.
+   */
   public async createProfile(
     username: string,
-    bio: string = "", // Added bio parameter to match UserContext
+    bio: string = "", // Added bio parameter
     profileImageHash: string = "" // Added profileImageHash parameter
-  ): Promise<string> {
+  ): Promise<void> {
     const contract = this.ensureContract();
     this.ensureSigner();
 
-    // Ensure the contract has a 'createProfile' function. If not, use 'registerUser'
-    // This is a fallback in case your deployed contract only has 'registerUser' and not 'createProfile'
+    // Try to call 'createProfile' if it exists in the contract ABI
     if (contract.createProfile) {
       const tx = await contract.createProfile(username, bio, profileImageHash);
       await tx.wait();
-      return tx.hash;
-    } else if (contract.registerUser) {
-      // If 'createProfile' doesn't exist, try 'registerUser' (from your older code)
-      // NOTE: You might need to adjust parameters if 'registerUser' doesn't take bio/profileImageHash
-      const tx = await contract.registerUser(username); // Assuming registerUser only takes username
+    }
+    // Fallback: If 'createProfile' doesn't exist, use 'registerUser' (from your deployed contract)
+    else if (contract.registerUser) {
+      // IMPORTANT: If your 'registerUser' only takes 'username', this call will work for sign-up.
+      // If you need to pass bio/profileImageHash with 'registerUser', you'll need to update the contract's 'registerUser' function as well.
+      const tx = await contract.registerUser(username);
       await tx.wait();
-      return tx.hash;
     } else {
       throw new Error(
-        "Neither 'createProfile' nor 'registerUser' function found on the contract."
+        "No user registration function found on the contract ('createProfile' or 'registerUser')."
       );
     }
   }
 
-  // Post Functions
+  // Add updateProfile method to match interface
+  public async updateProfile(bio?: string, profileImageHash?: string): Promise<void> {
+    const contract = this.ensureContract();
+    this.ensureSigner();
+
+    if (contract.updateProfile) {
+      const tx = await contract.updateProfile(profileImageHash || '');
+      await tx.wait();
+    } else {
+      throw new Error("updateProfile function not found on the contract");
+    }
+  }
+
+  // --- Post Functions ---
   public async getPost(postId: number): Promise<ContractPost> {
     const contract = this.ensureContract();
     const post = await contract.getPost(postId);
@@ -235,7 +260,7 @@ export class SocialMediaContractService {
     return Number(await contract.getTotalPosts());
   }
 
-  // Follow System Functions
+  // --- Follow System Functions ---
   public async followUser(userAddress: string): Promise<string> {
     const contract = this.ensureContract();
     this.ensureSigner();
@@ -264,7 +289,7 @@ export class SocialMediaContractService {
     return await contract.getFollowing(address);
   }
 
-  // Chat System Functions
+  // --- Chat System Functions ---
   public async createChat(participantAddress: string): Promise<string> {
     const contract = this.ensureContract();
     this.ensureSigner();
@@ -319,7 +344,7 @@ export class SocialMediaContractService {
     return Number(await contract.getChatWithUser(userAddress));
   }
 
-  // Event Listeners
+  // --- Event Listeners ---
   public onUserRegistered(
     callback: (user: string, username: string) => void
   ): void {
@@ -377,7 +402,7 @@ export class SocialMediaContractService {
     });
   }
 
-  // Cleanup
+  // --- Cleanup ---
   public removeAllListeners(): void {
     if (this.contract) {
       this.contract.removeAllListeners();

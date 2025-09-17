@@ -70,7 +70,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   // Fetches the user profile from the smart contract for the current connected account
   const fetchUserProfile = async () => {
-    if (!account || !isConnected) {
+    // In development/mock mode, use a default account if none is connected
+    const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
+
+    if (!effectiveAccount && !import.meta.env.DEV) {
       setCurrentUser(null); // Clear user if disconnected or no account
       setIsLoading(false); // Ensure loading is false if not connected
       return;
@@ -80,24 +83,44 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      const userProfile = await getUserProfile(account);
+      const userProfile = await getUserProfile(effectiveAccount);
+      console.log('📊 Fetched profile:', {
+        address: effectiveAccount,
+        profile: userProfile,
+        isActive: userProfile?.isActive,
+        username: userProfile?.username
+      });
 
       // Check if userProfile is valid and has an active status
-      const isRegistered = userProfile && userProfile.isActive;
+      const isRegistered = Boolean(userProfile && userProfile.isActive);
+
+      console.log('🔍 Registration check:', {
+        hasProfile: !!userProfile,
+        isActive: userProfile?.isActive,
+        isActiveType: typeof userProfile?.isActive,
+        isRegistered: isRegistered,
+        isRegisteredType: typeof isRegistered
+      });
 
       const user: CurrentUser = {
-        address: account,
+        address: effectiveAccount,
         isRegistered: isRegistered,
         profile: isRegistered ? userProfile : undefined, // Only assign profile if registered
       };
 
+      console.log('✅ Setting currentUser:', {
+        address: user.address,
+        isRegistered: user.isRegistered,
+        isRegisteredType: typeof user.isRegistered,
+        username: user.profile?.username
+      });
       setCurrentUser(user);
     } catch (err) {
       console.error("Error fetching user profile:", err);
       // If there's an error fetching the profile, we assume the user is not registered yet.
       // We still set the current user with the account, indicating they exist but aren't registered.
       setCurrentUser({
-        address: account,
+        address: effectiveAccount,
         isRegistered: false,
         // profile will be undefined here as they are not registered
       });
@@ -113,14 +136,46 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     bio: string = "",
     profileImageHash?: string
   ): Promise<void> => {
-    if (!account) throw new Error("Wallet not connected.");
+    // In development/mock mode, use a default account if none is connected
+    const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
+
+    if (!effectiveAccount) throw new Error("Wallet not connected.");
 
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('🔄 Creating profile for:', username);
       await createProfile(username, bio, profileImageHash);
+      console.log('🔄 Fetching updated profile...');
       await fetchUserProfile(); // Refresh profile after creation to reflect registration
+
+      // Immediate fallback: Set user as registered if profile creation succeeded
+      const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
+      if (effectiveAccount) {
+        console.log('🔧 Immediate state update: Setting user as registered');
+        setCurrentUser(prev => ({
+          address: effectiveAccount,
+          isRegistered: true,
+          profile: {
+            username: username,
+            bio: bio || 'New SmartBlock user! 🚀',
+            profileImageHash: profileImageHash || 'QmDefaultProfileImage',
+            postCount: 0,
+            followerCount: 0,
+            followingCount: 0,
+            isActive: true,
+          }
+        }));
+      }
+
+      // Force another profile fetch after a short delay to ensure data consistency
+      setTimeout(async () => {
+        console.log('🔄 Double-checking profile after registration...');
+        await fetchUserProfile();
+      }, 500);
+
+      console.log('✅ Registration completed in UserContext');
     } catch (err) {
       console.error("Error registering user:", err);
       setError("Failed to register user. Please check console for details.");
@@ -194,6 +249,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // Effect to fetch the current user's profile when the account or connection status changes
   useEffect(() => {
     if (account && isConnected) {
+      fetchUserProfile();
+    } else if (import.meta.env.DEV) {
+      // In development mode, try to fetch profile even without wallet connection
+      console.log('🔧 Dev mode: Fetching user profile without wallet connection');
       fetchUserProfile();
     } else {
       setCurrentUser(null); // Clear user data if disconnected or no account

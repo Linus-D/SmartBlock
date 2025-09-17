@@ -1,13 +1,14 @@
 // src/hooks/useContract.ts
 import { useState, useEffect, useCallback } from "react";
 import { useWeb3 } from "../context/Web3Context";
-import {
-  contractService,
-  type ContractUser,
-  type ContractPost,
-  type ContractComment,
-  type UserProfile,
-} from "../lib/contractService";
+import { dataService, DataMode } from "../lib/dataService";
+import type {
+  UserProfile,
+  Post,
+  ContractComment,
+  ContractMessage,
+  ContractChat
+} from "../types/contract";
 import { isSupportedNetwork } from "../lib/contractConfig";
 
 export const useContract = () => {
@@ -16,33 +17,52 @@ export const useContract = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Initialize contract when wallet is connected
+  // Initialize data service when wallet is connected
   useEffect(() => {
-    if (isConnected && provider && chainId) {
-      if (!isSupportedNetwork(chainId)) {
-        setError(`Unsupported network. Please switch to a supported network.`);
-        setIsContractReady(false);
-        return;
-      }
-
-      try {
-        if (signer) {
-          contractService.initializeWithSigner(signer);
-        } else {
-          contractService.initializeWithProvider(provider);
+    const initializeDataService = async () => {
+      if (isConnected && provider && chainId) {
+        if (!isSupportedNetwork(chainId)) {
+          setError(`Unsupported network. Please switch to a supported network.`);
+          setIsContractReady(false);
+          return;
         }
-        setIsContractReady(true);
-        setError(null);
-      } catch (err: any) {
-        setError(`Failed to initialize contract: ${err.message}`);
-        setIsContractReady(false);
+
+        try {
+          if (signer) {
+            await dataService.initializeWithSigner(signer);
+          } else {
+            await dataService.initializeWithProvider(provider);
+          }
+          setIsContractReady(true);
+          setError(null);
+
+          // Log current data mode for debugging
+          const mode = dataService.getCurrentMode();
+          console.log(`Data service initialized: ${mode.mode} mode, using ${mode.usingMock ? 'mock' : 'real'} data`);
+        } catch (err: any) {
+          setError(`Failed to initialize data service: ${err.message}`);
+          setIsContractReady(false);
+        }
+      } else {
+        // In development mode, initialize with mock data even without wallet
+        if (import.meta.env.DEV) {
+          try {
+            await dataService.initializeWithProvider(null);
+            setIsContractReady(true);
+            setError(null);
+          } catch (err: any) {
+            console.warn('Failed to initialize mock data service:', err.message);
+          }
+        } else {
+          setIsContractReady(false);
+          if (!isConnected) {
+            setError(null); // Clear error when disconnected
+          }
+        }
       }
-    } else {
-      setIsContractReady(false);
-      if (!isConnected) {
-        setError(null); // Clear error when disconnected
-      }
-    }
+    };
+
+    initializeDataService();
   }, [isConnected, provider, signer, chainId]);
 
   // Generic transaction wrapper
@@ -88,7 +108,7 @@ export const useContract = () => {
   const createProfile = useCallback(
     async (username: string, bio: string = "", profileImageHash?: string) => {
       return executeTransaction(() =>
-        contractService.createProfile(username, bio, profileImageHash)
+        dataService.createProfile(username, bio, profileImageHash)
       );
     },
     [executeTransaction]
@@ -96,10 +116,17 @@ export const useContract = () => {
 
   const getUserProfile = useCallback(
     async (userAddress: string): Promise<UserProfile | null> => {
-      if (!isContractReady) return null;
+      // In dev mode, allow profile retrieval even if contract not ready (for mock data)
+      if (!isContractReady && !import.meta.env.DEV) {
+        console.log('⚠️ Contract not ready, returning null');
+        return null;
+      }
 
       try {
-        return await contractService.getUserProfile(userAddress);
+        console.log('🔄 Getting user profile from dataService for:', userAddress);
+        const profile = await dataService.getUserProfile(userAddress);
+        console.log('📊 DataService returned profile:', profile);
+        return profile;
       } catch (error) {
         console.error("Error getting user profile:", error);
         return null;
@@ -112,18 +139,18 @@ export const useContract = () => {
   const createPost = useCallback(
     async (content: string, ipfsHash: string = "") => {
       return executeTransaction(() =>
-        contractService.createPost(content, ipfsHash)
+        dataService.createPost(content, ipfsHash)
       );
     },
     [executeTransaction]
   );
 
   const getPost = useCallback(
-    async (postId: number): Promise<ContractPost | null> => {
+    async (postId: number): Promise<Post | null> => {
       if (!isContractReady) return null;
 
       try {
-        return await contractService.getPost(postId);
+        return await dataService.getPost(postId);
       } catch (error) {
         console.error("Error getting post:", error);
         return null;
@@ -134,7 +161,7 @@ export const useContract = () => {
 
   const likePost = useCallback(
     async (postId: number) => {
-      return executeTransaction(() => contractService.likePost(postId));
+      return executeTransaction(() => dataService.likePost(postId));
     },
     [executeTransaction]
   );
@@ -144,7 +171,7 @@ export const useContract = () => {
       if (!isContractReady) return [];
 
       try {
-        return await contractService.getUserPosts(userAddress);
+        return await dataService.getUserPosts(userAddress);
       } catch (error) {
         console.error("Error getting user posts:", error);
         return [];
@@ -157,7 +184,7 @@ export const useContract = () => {
     if (!isContractReady) return 0;
 
     try {
-      return await contractService.getTotalPosts();
+      return await dataService.getTotalPosts();
     } catch (error) {
       console.error("Error getting total posts:", error);
       return 0;
@@ -167,7 +194,7 @@ export const useContract = () => {
   // Follow Functions
   const followUser = useCallback(
     async (userAddress: string) => {
-      return executeTransaction(() => contractService.followUser(userAddress));
+      return executeTransaction(() => dataService.followUser(userAddress));
     },
     [executeTransaction]
   );
@@ -175,7 +202,7 @@ export const useContract = () => {
   const unfollowUser = useCallback(
     async (userAddress: string) => {
       return executeTransaction(() =>
-        contractService.unfollowUser(userAddress)
+        dataService.unfollowUser(userAddress)
       );
     },
     [executeTransaction]
@@ -186,7 +213,7 @@ export const useContract = () => {
       if (!isContractReady) return [];
 
       try {
-        return await contractService.getFollowers(userAddress);
+        return await dataService.getFollowers(userAddress);
       } catch (error) {
         console.error("Error getting followers:", error);
         return [];
@@ -200,7 +227,7 @@ export const useContract = () => {
       if (!isContractReady) return [];
 
       try {
-        return await contractService.getFollowing(userAddress);
+        return await dataService.getFollowing(userAddress);
       } catch (error) {
         console.error("Error getting following:", error);
         return [];
@@ -208,6 +235,58 @@ export const useContract = () => {
     },
     [isContractReady]
   );
+
+  // Additional utility functions for enhanced functionality
+  const getAllPosts = useCallback(
+    async (limit: number = 50, offset: number = 0): Promise<Post[]> => {
+      if (!isContractReady) return [];
+
+      try {
+        return await dataService.getAllPosts(limit, offset);
+      } catch (error) {
+        console.error("Error getting all posts:", error);
+        return [];
+      }
+    },
+    [isContractReady]
+  );
+
+  const getRecentPosts = useCallback(
+    async (limit: number = 20): Promise<Post[]> => {
+      if (!isContractReady) return [];
+
+      try {
+        return await dataService.getRecentPosts(limit);
+      } catch (error) {
+        console.error("Error getting recent posts:", error);
+        return [];
+      }
+    },
+    [isContractReady]
+  );
+
+  const getFeedPosts = useCallback(
+    async (userAddress: string, limit: number = 20): Promise<Post[]> => {
+      if (!isContractReady) return [];
+
+      try {
+        return await dataService.getFeedPosts(userAddress, limit);
+      } catch (error) {
+        console.error("Error getting feed posts:", error);
+        return [];
+      }
+    },
+    [isContractReady]
+  );
+
+  // Data mode utilities
+  const getCurrentDataMode = useCallback(() => {
+    return dataService.getCurrentMode();
+  }, []);
+
+  const setDataMode = useCallback((mode: DataMode) => {
+    dataService.setMode(mode);
+  }, []);
 
   return {
     // State
@@ -225,12 +304,19 @@ export const useContract = () => {
     getUserPosts,
     getTotalPosts,
     likePost,
+    getAllPosts,
+    getRecentPosts,
+    getFeedPosts,
 
     // Follow functions
     followUser,
     unfollowUser, // Added missing unfollow function
     getFollowers,
     getFollowing,
+
+    // Data mode utilities
+    getCurrentDataMode,
+    setDataMode,
 
     // Generic transaction executor
     executeTransaction,

@@ -115,4 +115,14 @@ export const useIPFS = (): UseIPFSReturn => {
       type: 'profile-image',
       name: `Avatar-${Date.now()}`,
     });
-  }, [
+  }, [uploadFile]);
+
+  return {
+    uploadToIPFS,
+    uploadFile,
+    uploadAvatar,
+    uploadProgress,
+    isUploading,
+    clearProgress
+  };
+};

@@ -62,7 +62,13 @@ const Connect: React.FC = () => {
     setIsRegistering(true);
     try {
       await registerUser(username);
-      // navigation handled by useEffect below
+      console.log('✅ Registration completed, forcing navigation to feed...');
+
+      // Immediate navigation fallback - don't rely only on useEffect
+      setTimeout(() => {
+        navigate("/feed");
+      }, 100); // Small delay to ensure state updates
+
     } catch (error) {
       console.error("Registration failed:", error);
       alert("Registration failed. Please try again.");
@@ -73,7 +79,22 @@ const Connect: React.FC = () => {
 
   // --- Side Effects ---
   useEffect(() => {
-    if (isConnected && !userLoading && currentUser?.isRegistered) {
+    // In mock mode, we don't require wallet connection, just user registration
+    const shouldNavigate = !userLoading && currentUser?.isRegistered &&
+      (isConnected || import.meta.env.DEV);
+
+    console.log('🔍 Navigation check:', {
+      shouldNavigate,
+      userLoading,
+      isRegistered: currentUser?.isRegistered,
+      isConnected,
+      isDev: import.meta.env.DEV,
+      currentUser: currentUser?.address,
+      userProfile: currentUser?.profile?.username
+    });
+
+    if (shouldNavigate) {
+      console.log('✅ User registered via useEffect, navigating to feed...');
       navigate("/feed");
     }
   }, [isConnected, userLoading, currentUser?.isRegistered, navigate]);
@@ -87,7 +108,7 @@ const Connect: React.FC = () => {
           className="mx-auto text-blue-500 dark:text-blue-400"
         />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Connect Your Wallet
+          {import.meta.env.DEV && !isConnected ? 'Get Started with SmartBlock' : 'Connect Your Wallet'}
         </h1>
 
         {userLoading ? (
@@ -95,7 +116,7 @@ const Connect: React.FC = () => {
             <Loader className="animate-spin" size={20} />
             <span>Initializing connection...</span>
           </div>
-        ) : !isConnected ? (
+        ) : !isConnected && !import.meta.env.DEV ? (
           <Button
             onClick={handleConnectWallet}
             disabled={isConnecting}
@@ -126,14 +147,16 @@ const Connect: React.FC = () => {
               </div>
             )}
 
-            {isCorrectNetwork &&
+            {(isCorrectNetwork || import.meta.env.DEV) &&
               !userLoading &&
               currentUser &&
               !currentUser.isRegistered && (
                 <div className="space-y-4">
                   <p className="text-gray-600 dark:text-gray-400">
-                    It looks like you're new here! Choose a username to get
-                    started.
+                    {import.meta.env.DEV && !isConnected
+                      ? 'Welcome to SmartBlock! Choose a username to get started with mock data.'
+                      : "It looks like you're new here! Choose a username to get started."
+                    }
                   </p>
                   <form onSubmit={handleRegisterUser} className="space-y-4">
                     <Input
@@ -156,7 +179,7 @@ const Connect: React.FC = () => {
                 </div>
               )}
 
-            {isCorrectNetwork && !userLoading && currentUser?.isRegistered && (
+            {(isCorrectNetwork || import.meta.env.DEV) && !userLoading && currentUser?.isRegistered && (
               <div className="text-green-500 flex items-center justify-center space-x-2">
                 <CheckCircle size={20} />
                 <span>You're all set! Redirecting...</span>
