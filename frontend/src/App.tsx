@@ -8,6 +8,7 @@ import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
 import { Messages } from "./pages/Messages";
 import Explore from "./pages/Explore";
+import Notifications from "./pages/Notifications";
 
 // Routes
 import PrivateRoute from "./routes/PrivateRoute";
@@ -63,6 +64,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <Explore />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <PrivateRoute>
+              <Notifications />
             </PrivateRoute>
           }
         />
