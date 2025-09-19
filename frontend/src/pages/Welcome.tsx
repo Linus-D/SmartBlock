@@ -155,7 +155,7 @@ const GradientText: React.FC<{ text: string; className?: string }> = ({
 }) => {
   return (
     <span
-      className={`bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 bg-clip-text text-transparent bg-300% animate-gradient ${className}`}
+      className={`bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 bg-clip-text text-transparent bg-300 animate-gradient ${className}`}
     >
       {text}
     </span>

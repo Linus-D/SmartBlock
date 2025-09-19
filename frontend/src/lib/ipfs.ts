@@ -1,16 +1,16 @@
 // frontend/src/lib/ipfs.ts
-import axios from "axios";
+// import axios from "axios";
 
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 const IPFS_GATEWAY =
   import.meta.env.VITE_IPFS_GATEWAY || "https://gateway.pinata.cloud/ipfs/";
 
-interface PinataResponse {
-  IpfsHash: string;
-  PinSize: number;
-  Timestamp: string;
-}
+// interface PinataResponse {
+//   IpfsHash: string;
+//   PinSize: number;
+//   Timestamp: string;
+// }
 
 interface IPFSUploadOptions {
   name?: string;
@@ -65,19 +65,17 @@ export class IPFSService {
     }
 
     try {
-      const response = await axios.post<PinataResponse>(
-        "https://api.pinata.cloud/pinning/pinFileToIPFS",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            pinata_api_key: this.apiKey,
-            pinata_secret_api_key: this.secretKey,
-          },
-        }
-      );
+      // Mock implementation for now - replace with actual axios when available
+      const response = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+        method: "POST",
+        headers: {
+          pinata_api_key: this.apiKey,
+          pinata_secret_api_key: this.secretKey,
+        },
+        body: formData,
+      }).then(res => res.json());
 
-      const hash = response.data.IpfsHash;
+      const hash = response.IpfsHash;
       return {
         hash,
         name: options?.name || file.name,
@@ -107,19 +105,17 @@ export class IPFSService {
     };
 
     try {
-      const response = await axios.post<PinataResponse>(
-        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            pinata_api_key: this.apiKey,
-            pinata_secret_api_key: this.secretKey,
-          },
-        }
-      );
+      const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          pinata_api_key: this.apiKey,
+          pinata_secret_api_key: this.secretKey,
+        },
+        body: JSON.stringify(body),
+      }).then(res => res.json());
 
-      const hash = response.data.IpfsHash;
+      const hash = response.IpfsHash;
       return {
         hash,
         name: options?.name || "JSON Data",
@@ -138,8 +134,8 @@ export class IPFSService {
   async fetchJSON<T>(hash: string): Promise<T> {
     try {
       const url = this.getFileUrl(hash);
-      const response = await axios.get<T>(url);
-      return response.data;
+      const response = await fetch(url).then(res => res.json());
+      return response;
     } catch (error) {
       console.error("Failed to fetch IPFS JSON:", error);
       throw new Error("Failed to fetch data from IPFS");
