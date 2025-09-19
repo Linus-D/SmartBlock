@@ -35,12 +35,26 @@ app.get('/recommend/:userAddress', (req, res) => {
       return res.status(500).json({ error: "Error generating recommendations" });
     }
     
+    // Validate and clean the data before parsing
+    const cleanData = dataToSend.trim();
+    if (!cleanData) {
+      console.error("Empty response from Python script");
+      return res.status(500).json({ error: "Empty response from recommendation engine" });
+    }
+    
     try {
-      const recommendations = JSON.parse(dataToSend);
+      const recommendations = JSON.parse(cleanData);
+      
+      // Validate the parsed data structure
+      if (typeof recommendations !== 'object' || recommendations === null) {
+        throw new Error('Invalid recommendations format');
+      }
+      
       res.json(recommendations);
     } catch (error) {
       console.error("Error parsing Python output:", error);
-      res.status(500).json({ error: "Error parsing recommendations" });
+      console.error("Raw output:", dataToSend);
+      res.status(500).json({ error: "Error parsing recommendations", details: error.message });
     }
   });
 });

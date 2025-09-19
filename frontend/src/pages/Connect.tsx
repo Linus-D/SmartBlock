@@ -1,16 +1,15 @@
 // src/pages/Connect.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Wallet, AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { useWeb3 } from "../context/Web3Context";
 import { useUser } from "../context/UserContext";
-import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 import { validateUsername } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 
 const Connect: React.FC = () => {
   const {
-    account,
     chainId,
     isConnected,
     isConnecting,
@@ -19,22 +18,21 @@ const Connect: React.FC = () => {
   } = useWeb3();
   const { currentUser, isLoading: userLoading, registerUser } = useUser();
   const navigate = useNavigate();
+  const hasNavigated = useRef(false);
 
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
 
   const targetChainId = parseInt(import.meta.env.VITE_CHAIN_ID || "11155111");
-  const isCorrectNetwork = chainId === targetChainId;
+  const isCorrectNetwork = import.meta.env.DEV ? true : chainId === targetChainId;
 
   // --- Event Handlers ---
   const handleConnectWallet = async () => {
-    // Check if the connection is already in progress
     if (isConnecting) return;
 
     try {
       await connectWallet();
     } catch (error) {
-      // Check for the specific MetaMask "Already processing" error
       if (
         error &&
         typeof error === "object" &&
@@ -53,52 +51,57 @@ const Connect: React.FC = () => {
 
   const handleRegisterUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("🔄 Registration button clicked, username:", username);
+    
     if (!validateUsername(username)) {
+      console.log("❌ Username validation failed:", username);
       alert(
         "Username must be 3-20 characters long and contain only letters, numbers, and underscores."
       );
       return;
     }
+    
+    console.log("✅ Username validation passed, starting registration...");
     setIsRegistering(true);
+    
     try {
+      console.log("🚀 Calling registerUser function...");
       await registerUser(username);
-      console.log("✅ Registration completed, forcing navigation to feed...");
-
-      // Immediate navigation fallback - don't rely only on useEffect
-      setTimeout(() => {
-        navigate("/feed");
-      }, 100); // Small delay to ensure state updates
+      console.log("✅ Registration completed, waiting for navigation...");
+      hasNavigated.current = true;
+      // Don't navigate here - let the useEffect handle it
     } catch (error) {
-      console.error("Registration failed:", error);
+      console.error("❌ Registration failed:", error);
       alert("Registration failed. Please try again.");
     } finally {
+      console.log("🔄 Setting isRegistering to false");
       setIsRegistering(false);
     }
   };
 
   // --- Side Effects ---
   useEffect(() => {
-    // In mock mode, we don't require wallet connection, just user registration
+    if (hasNavigated.current) return;
+
     const shouldNavigate =
       !userLoading &&
       currentUser?.isRegistered &&
       (isConnected || import.meta.env.DEV);
 
-    console.log("🔍 Navigation check:", {
-      shouldNavigate,
-      userLoading,
-      isRegistered: currentUser?.isRegistered,
-      isConnected,
-      isDev: import.meta.env.DEV,
-      currentUser: currentUser?.address,
-      userProfile: currentUser?.profile?.username,
-    });
+    // Reduced logging to prevent console spam
+    if (shouldNavigate) {
+      console.log("🔍 Navigation triggered - user is registered");
+    }
 
     if (shouldNavigate) {
       console.log("✅ User registered via useEffect, navigating to feed...");
-      navigate("/feed");
+      hasNavigated.current = true;
+      // Use a longer delay to prevent rate limiting
+      setTimeout(() => {
+        navigate("/feed", { replace: true });
+      }, 1000);
     }
-  }, [isConnected, userLoading, currentUser?.isRegistered, navigate]);
+  }, [isConnected, userLoading, currentUser?.isRegistered]); // Removed navigate to prevent infinite loop
 
   // --- JSX Rendering ---
   return (
@@ -133,7 +136,7 @@ const Connect: React.FC = () => {
             {isCorrectNetwork ? (
               <div className="text-green-500 flex items-center justify-center space-x-2">
                 <CheckCircle size={20} />
-                <span>Wallet Connected to Sepolia</span>
+                <span>{import.meta.env.DEV ? "Development Mode" : "Wallet Connected to Sepolia"}</span>
               </div>
             ) : (
               <div className="text-red-500 space-y-2">
@@ -165,7 +168,7 @@ const Connect: React.FC = () => {
                       type="text"
                       placeholder="Choose a username"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                       disabled={isRegistering}
                       aria-label="Username input"
                     />

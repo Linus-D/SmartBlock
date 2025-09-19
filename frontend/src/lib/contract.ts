@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { SocialMediaPlatform } from "../../../Project_Backend/typechain-types";
+import type { SocialMediaPlatform } from "../../../Project_Backend/typechain-types";
 import contractABI from "../../../Project_Backend/frontend/constants/abi.json";
 import contractAddress from "../../../Project_Backend/frontend/constants/contractAddress.json";
 
@@ -13,5 +13,5 @@ export const getContract = (
     CONTRACT_ADDRESS,
     CONTRACT_ABI,
     signerOrProvider
-  ) as SocialMediaPlatform;
+  ) as unknown as SocialMediaPlatform;
 };

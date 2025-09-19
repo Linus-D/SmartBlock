@@ -152,16 +152,45 @@ function validatePackageJson() {
 
   try {
     // Check backend package.json
-    const backendPkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'Project_Backend', 'package.json')));
+    const backendPkgPath = path.join(__dirname, 'Project_Backend', 'package.json');
+    let backendPkg;
+    try {
+      if (!fs.existsSync(backendPkgPath)) {
+        throw new Error(`Backend package.json not found at: ${backendPkgPath}`);
+      }
+      const backendContent = fs.readFileSync(backendPkgPath, 'utf8');
+      if (!backendContent.trim()) {
+        throw new Error('Backend package.json is empty');
+      }
+      backendPkg = JSON.parse(backendContent);
+    } catch (error) {
+      log(`❌ Failed to read backend package.json: ${error.message}`, 'red');
+      return;
+    }
+    
     if (backendPkg.scripts && backendPkg.scripts.compile && backendPkg.scripts['deploy:local']) {
       log('✅ Backend scripts configured correctly', 'green');
     } else {
-      log('❌ Backend package.json missing required scripts', 'red');
-      return false;
+      log('❌ Backend scripts missing or incomplete', 'red');
     }
 
     // Check frontend package.json
-    const frontendPkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'frontend', 'package.json')));
+    const frontendPkgPath = path.join(__dirname, 'frontend', 'package.json');
+    let frontendPkg;
+    try {
+      if (!fs.existsSync(frontendPkgPath)) {
+        throw new Error(`Frontend package.json not found at: ${frontendPkgPath}`);
+      }
+      const frontendContent = fs.readFileSync(frontendPkgPath, 'utf8');
+      if (!frontendContent.trim()) {
+        throw new Error('Frontend package.json is empty');
+      }
+      frontendPkg = JSON.parse(frontendContent);
+    } catch (error) {
+      log(`❌ Failed to read frontend package.json: ${error.message}`, 'red');
+      return;
+    }
+    
     if (frontendPkg.dependencies && frontendPkg.dependencies.ethers && frontendPkg.dependencies.viem) {
       log('✅ Frontend Web3 dependencies present', 'green');
     } else {

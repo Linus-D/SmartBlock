@@ -57,8 +57,8 @@ export function getContractConfig(): ContractConfig {
     contractAddress = contractAddresses[addressKey] || "";
 
     // Fallback to deployment.json if available
-    if (!contractAddress && deploymentData?.address) {
-      contractAddress = deploymentData.address;
+    if (!contractAddress && deploymentData?.contractAddress) {
+      contractAddress = deploymentData.contractAddress;
     }
   }
 
@@ -75,8 +75,8 @@ export function getContractConfig(): ContractConfig {
     address: contractAddress,
     chainId,
     blockExplorerUrl: network.blockExplorerUrl,
-    // Add start block from deployment if available
-    startBlock: deploymentData?.blockNumber || undefined,
+    // Add start block from deployment if available (deployment.json doesn't have blockNumber)
+    startBlock: undefined,
   };
 }
 

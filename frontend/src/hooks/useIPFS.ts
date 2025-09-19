@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ipfsService, IPFSFile } from '../lib/ipfs';
+import { ipfsService, type IPFSUploadOptions, type IPFSFile } from '../lib/ipfs';
 
 interface UploadProgress {
   file: string;
@@ -10,25 +10,21 @@ interface UploadProgress {
 
 interface UseIPFSReturn {
   // Upload functions
-  uploadFile: (file: File, metadata?: Record<string, any>) => Promise<IPFSFile>;
-  uploadJSON: (data: any, name?: string) => Promise<IPFSFile>;
+  uploadFile: (file: File, options?: IPFSUploadOptions) => Promise<IPFSFile>;
+  uploadJSON: (data: any, options?: IPFSUploadOptions) => Promise<IPFSFile>;
   uploadAvatar: (file: File) => Promise<IPFSFile>;
-  uploadPostMedia: (files: File[]) => Promise<IPFSFile[]>;
-  uploadPostMetadata: (content: any) => Promise<IPFSFile>;
-  uploadProfileMetadata: (profile: any) => Promise<IPFSFile>;
-
+  
   // Retrieval functions
-  getData: <T = any>(hash: string) => Promise<T>;
   getFileUrl: (hash: string) => string;
+  fetchJSON: <T = any>(hash: string) => Promise<T>;
 
   // State
   isUploading: boolean;
   uploadProgress: UploadProgress[];
   error: string | null;
 
-  // Configuration
-  isConfigured: boolean;
-  testConnection: () => Promise<boolean>;
+  // Utility
+  clearProgress: (fileName?: string) => void;
 }
 
 export const useIPFS = (): UseIPFSReturn => {
@@ -59,14 +55,14 @@ export const useIPFS = (): UseIPFSReturn => {
 
   const uploadFile = useCallback(async (
     file: File, 
-    metadata?: Record<string, any>
+    options?: IPFSUploadOptions
   ): Promise<IPFSFile> => {
     setIsUploading(true);
     setError(null);
     updateProgress(file.name, { status: 'uploading', progress: 0 });
 
     try {
-      const result = await ipfsService.uploadFile(file, metadata);
+      const result = await ipfsService.uploadFile(file, options);
       updateProgress(file.name, { status: 'completed', progress: 100 });
       
       // Clear progress after a short delay
@@ -85,15 +81,15 @@ export const useIPFS = (): UseIPFSReturn => {
 
   const uploadJSON = useCallback(async (
     data: any, 
-    name?: string
+    options?: IPFSUploadOptions
   ): Promise<IPFSFile> => {
     setIsUploading(true);
     setError(null);
-    const fileName = name || 'JSON Data';
+    const fileName = options?.name || 'JSON Data';
     updateProgress(fileName, { status: 'uploading', progress: 50 });
 
     try {
-      const result = await ipfsService.uploadJSON(data, name);
+      const result = await ipfsService.uploadJSON(data, options);
       updateProgress(fileName, { status: 'completed', progress: 100 });
       
       setTimeout(() => clearProgress(fileName), 2000);
@@ -111,18 +107,35 @@ export const useIPFS = (): UseIPFSReturn => {
 
   const uploadAvatar = useCallback(async (file: File): Promise<IPFSFile> => {
     return uploadFile(file, {
-      category: 'avatar',
-      type: 'profile-image',
       name: `Avatar-${Date.now()}`,
+      description: 'User avatar image'
     });
   }, [uploadFile]);
 
+  const getFileUrl = useCallback((hash: string): string => {
+    return ipfsService.getFileUrl(hash);
+  }, []);
+
+  const fetchJSON = useCallback(async <T = any>(hash: string): Promise<T> => {
+    setError(null);
+    try {
+      return await ipfsService.fetchJSON<T>(hash);
+    } catch (err: any) {
+      const errorMsg = err.message || 'Fetch failed';
+      setError(errorMsg);
+      throw err;
+    }
+  }, []);
+
   return {
-    uploadToIPFS,
     uploadFile,
+    uploadJSON,
     uploadAvatar,
-    uploadProgress,
+    getFileUrl,
+    fetchJSON,
     isUploading,
+    uploadProgress,
+    error,
     clearProgress
   };
 };

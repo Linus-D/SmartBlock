@@ -11,7 +11,7 @@ import {
   Lock,
   Heart,
 } from "lucide-react";
-import { Button } from "../components/ui/Button";
+import Button from "../components/ui/Button";
 import { useWeb3 } from "../context/Web3Context";
 
 // Simple Three.js scene component for stars background

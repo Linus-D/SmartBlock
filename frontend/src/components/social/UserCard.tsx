@@ -1,7 +1,7 @@
 // src/components/social/UserCard.tsx
 import React from "react";
 import type { User } from "../../types/user";
-import { Button } from "../ui/Button";
+import Button from "../ui/Button";
 import { formatAddress } from "../../lib/utils";
 
 interface UserCardProps {
@@ -42,7 +42,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, onFollowToggle }) => {
       {onFollowToggle && (
         <Button
           size="sm"
-          variant={user.isFollowing ? "outline" : "default"}
+          variant={user.isFollowing ? "outline" : "primary"}
           onClick={handleFollowClick}
         >
           {user.isFollowing ? "Following" : "Follow"}

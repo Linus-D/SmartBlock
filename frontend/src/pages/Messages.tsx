@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Send, Search, Plus } from "lucide-react";
 import { useWeb3 } from "../context/Web3Context";
 import { useContract } from "../hooks/useContract";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
-import type { UserSearch } from "../components/social/UserSearch";
-import type { User } from "../types/user";
+import UserSearch from "../components/social/UserSearch";
+import type { UserProfile } from "../types/contract";
 import { formatDate, formatAddress } from "../lib/utils";
 
 interface Chat {
@@ -34,11 +34,11 @@ interface Message {
 
 export const Messages: React.FC = () => {
   const { account } = useWeb3();
-  const { createChat, sendMessage, getUserInfo } = useContract();
+  const { createChat, sendMessage } = useContract();
 
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [chats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,16 +56,18 @@ export const Messages: React.FC = () => {
     setIsLoading(false);
   };
 
-  const loadMessages = async (chatId: string) => {
+  const loadMessages = async (_chatId: string) => {
     // TODO: Implement loading messages from contract
     // This is a placeholder implementation
   };
 
-  const handleStartNewChat = async (user: User) => {
+  const handleStartNewChat = async (user: UserProfile) => {
     if (!account) return;
 
     try {
-      await createChat(user.address);
+      // Since UserProfile doesn't have address, we'll use the username as identifier
+      // This is a placeholder - in real implementation, you'd need the user's address
+      await createChat(user.username);
       setIsNewChatModalOpen(false);
       await loadChats(); // Refresh chats
     } catch (error) {
@@ -255,7 +257,7 @@ export const Messages: React.FC = () => {
               <form onSubmit={handleSendMessage} className="flex space-x-3">
                 <Input
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1"
                   disabled={isSending}

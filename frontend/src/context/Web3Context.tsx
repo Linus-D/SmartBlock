@@ -1,11 +1,5 @@
 // src/context/Web3Context.tsx - Debugged version
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { ethers } from "ethers";
 
 interface Web3ContextType {
@@ -32,8 +26,8 @@ export const useWeb3 = () => {
 
 // Utility functions moved inside or made more robust
 const getProvider = () => {
-  if (typeof window !== "undefined" && window.ethereum) {
-    return new ethers.BrowserProvider(window.ethereum);
+  if (typeof window !== "undefined" && (window as any).ethereum) {
+    return new ethers.BrowserProvider((window as any).ethereum);
   }
   throw new Error("No Ethereum provider found. Please install MetaMask.");
 };
@@ -44,19 +38,19 @@ const getSigner = async () => {
 };
 
 const switchToSepolia = async () => {
-  if (!window.ethereum) throw new Error("No wallet found");
+  if (!(window as any).ethereum) throw new Error("No wallet found");
 
   const sepoliaChainId = "0xaa36a7"; // Sepolia testnet
 
   try {
-    await window.ethereum.request({
+    await (window as any).ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: sepoliaChainId }],
     });
   } catch (switchError: any) {
     // Chain not added, add it
     if (switchError.code === 4902) {
-      await window.ethereum.request({
+      await (window as any).ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {
@@ -93,7 +87,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   const connectWallet = async () => {
     console.log("connectWallet called"); // Debug log
 
-    if (!window.ethereum) {
+    if (!(window as any).ethereum) {
       alert("Please install MetaMask!");
       throw new Error("No Ethereum provider found");
     }
@@ -103,7 +97,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       console.log("Requesting accounts..."); // Debug log
 
       // Request account access
-      await window.ethereum.request({ method: "eth_requestAccounts" });
+      await (window as any).ethereum.request({ method: "eth_requestAccounts" });
 
       console.log("Getting provider and signer..."); // Debug log
 
@@ -161,9 +155,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   // Check if already connected on mount
   useEffect(() => {
     const checkConnection = async () => {
-      if (window.ethereum) {
+      if ((window as any).ethereum) {
         try {
-          const accounts = await window.ethereum.request({
+          const accounts = await (window as any).ethereum.request({
             method: "eth_accounts",
           });
           if (accounts.length > 0) {
@@ -181,7 +175,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
   // Listen for account and network changes
   useEffect(() => {
-    if (window.ethereum) {
+    if ((window as any).ethereum) {
       const handleAccountsChanged = (accounts: string[]) => {
         console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
@@ -198,16 +192,16 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         setChainId(newChainId);
       };
 
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-      window.ethereum.on("chainChanged", handleChainChanged);
+      (window as any).ethereum.on("accountsChanged", handleAccountsChanged);
+      (window as any).ethereum.on("chainChanged", handleChainChanged);
 
       return () => {
-        if (window.ethereum.removeListener) {
-          window.ethereum.removeListener(
+        if ((window as any).ethereum.removeListener) {
+          (window as any).ethereum.removeListener(
             "accountsChanged",
             handleAccountsChanged
           );
-          window.ethereum.removeListener("chainChanged", handleChainChanged);
+          (window as any).ethereum.removeListener("chainChanged", handleChainChanged);
         }
       };
     }

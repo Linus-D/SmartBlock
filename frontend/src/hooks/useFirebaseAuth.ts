@@ -4,13 +4,29 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { auth, isFirebaseEnabled } from "../lib/firebase";
 
 export const useFirebaseAuth = () => {
-  const signup = (email: string, password: string) =>
-    createUserWithEmailAndPassword(auth, email, password);
-  const login = (email: string, password: string) =>
-    signInWithEmailAndPassword(auth, email, password);
-  const logout = () => signOut(auth);
-  return { signup, login, logout };
+  const signup = async (email: string, password: string) => {
+    if (!isFirebaseEnabled || !auth) {
+      throw new Error("Firebase authentication is not available");
+    }
+    return createUserWithEmailAndPassword(auth, email, password);
+  };
+  
+  const login = async (email: string, password: string) => {
+    if (!isFirebaseEnabled || !auth) {
+      throw new Error("Firebase authentication is not available");
+    }
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+  
+  const logout = async () => {
+    if (!isFirebaseEnabled || !auth) {
+      throw new Error("Firebase authentication is not available");
+    }
+    return signOut(auth);
+  };
+  
+  return { signup, login, logout, isFirebaseEnabled };
 };

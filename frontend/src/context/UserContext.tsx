@@ -4,11 +4,11 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import { useContract } from "../hooks/useContract"; // Make sure this hook correctly exports getUserProfile and createProfile
 import { useWeb3 } from "../context/Web3Context";
-import type { UserProfile } from "../types/contract"; // Ensure UserProfile type is correctly defined
+import type { UserProfile } from "../types/contract";
 
 interface CurrentUser {
   address: string;
@@ -30,7 +30,7 @@ interface UserContextType {
   unfollowUser: (userAddress: string) => Promise<void>;
   getOtherUserProfile: (userAddress: string) => Promise<UserProfile | null>;
 
-  // Legacy compatibility - keeping these for backward compatibility
+  // Legacy compatibility
   profile: UserProfile | null;
   hasProfile: boolean;
   createUserProfile: (
@@ -56,26 +56,38 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { account, isConnected } = useWeb3();
-  // Ensure your useContract hook correctly exports getUserProfile and createProfile
   const {
     getUserProfile,
     createProfile,
-    followUser: contractFollowUser, // Alias for clarity if needed
-    // Assuming other contract functions like unfollowUser, getOtherUserProfile might be here too
+    followUser: contractFollowUser,
   } = useContract();
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetches the user profile from the smart contract for the current connected account
+  // Helper to update state only if changed
+  const safeSetCurrentUser = (user: CurrentUser) => {
+    setCurrentUser((prev) => {
+      if (
+        prev?.address === user.address &&
+        prev?.isRegistered === user.isRegistered &&
+        prev?.profile?.username === user.profile?.username
+      ) {
+        return prev; // no update if unchanged
+      }
+      return user;
+    });
+  };
+
+  // Fetch user profile safely
   const fetchUserProfile = async () => {
-    // In development/mock mode, use a default account if none is connected
-    const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
+    const effectiveAccount =
+      account || (import.meta.env.DEV ? "0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8" : null);
 
     if (!effectiveAccount && !import.meta.env.DEV) {
-      setCurrentUser(null); // Clear user if disconnected or no account
-      setIsLoading(false); // Ensure loading is false if not connected
+      setCurrentUser(null);
+      setIsLoading(false);
       return;
     }
 
@@ -83,46 +95,21 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      const userProfile = await getUserProfile(effectiveAccount);
-      console.log('📊 Fetched profile:', {
-        address: effectiveAccount,
-        profile: userProfile,
-        isActive: userProfile?.isActive,
-        username: userProfile?.username
-      });
-
-      // Check if userProfile is valid and has an active status
-      const isRegistered = Boolean(userProfile && userProfile.isActive);
-
-      console.log('🔍 Registration check:', {
-        hasProfile: !!userProfile,
-        isActive: userProfile?.isActive,
-        isActiveType: typeof userProfile?.isActive,
-        isRegistered: isRegistered,
-        isRegisteredType: typeof isRegistered
-      });
+      const userProfile = await getUserProfile(effectiveAccount!);
+      const isRegistered = Boolean(userProfile && userProfile.isRegistered);
 
       const user: CurrentUser = {
-        address: effectiveAccount,
-        isRegistered: isRegistered,
-        profile: isRegistered ? userProfile : undefined, // Only assign profile if registered
+        address: effectiveAccount!,
+        isRegistered,
+        profile: isRegistered ? userProfile! : undefined,
       };
 
-      console.log('✅ Setting currentUser:', {
-        address: user.address,
-        isRegistered: user.isRegistered,
-        isRegisteredType: typeof user.isRegistered,
-        username: user.profile?.username
-      });
-      setCurrentUser(user);
+      safeSetCurrentUser(user);
     } catch (err) {
       console.error("Error fetching user profile:", err);
-      // If there's an error fetching the profile, we assume the user is not registered yet.
-      // We still set the current user with the account, indicating they exist but aren't registered.
       setCurrentUser({
-        address: effectiveAccount,
+        address: effectiveAccount!,
         isRegistered: false,
-        // profile will be undefined here as they are not registered
       });
       setError("Failed to fetch user profile. Please try again.");
     } finally {
@@ -130,14 +117,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
-  // Registers a new user with a username, bio, and optional profile image hash
   const registerUser = async (
     username: string,
     bio: string = "",
     profileImageHash?: string
   ): Promise<void> => {
-    // In development/mock mode, use a default account if none is connected
-    const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
+    console.log("📝 UserContext: registerUser called with username:", username);
+    
+    const effectiveAccount =
+      account || (import.meta.env.DEV ? "0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8" : null);
+
+    console.log("🔍 UserContext: effectiveAccount:", effectiveAccount);
+    console.log("🔍 UserContext: account:", account);
+    console.log("🔍 UserContext: DEV mode:", import.meta.env.DEV);
 
     if (!effectiveAccount) throw new Error("Wallet not connected.");
 
@@ -145,52 +137,44 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      console.log('🔄 Creating profile for:', username);
+      console.log("🚀 UserContext: Creating profile...");
       await createProfile(username, bio, profileImageHash);
-      console.log('🔄 Fetching updated profile...');
-      await fetchUserProfile(); // Refresh profile after creation to reflect registration
+      console.log("✅ UserContext: Profile created, fetching user profile...");
+      await fetchUserProfile();
 
-      // Immediate fallback: Set user as registered if profile creation succeeded
-      const effectiveAccount = account || (import.meta.env.DEV ? '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8' : null);
-      if (effectiveAccount) {
-        console.log('🔧 Immediate state update: Setting user as registered');
-        setCurrentUser(prev => ({
-          address: effectiveAccount,
+      // Immediate fallback to update state
+      safeSetCurrentUser({
+        address: effectiveAccount,
+        isRegistered: true,
+        profile: {
+          username,
+          bio: bio || "New SmartBlock user! 🚀",
+          profileImageHash: profileImageHash || "QmDefaultProfileImage",
+          postCount: 0,
+          followerCount: 0,
+          followingCount: 0,
+          isActive: true,
           isRegistered: true,
-          profile: {
-            username: username,
-            bio: bio || 'New SmartBlock user! 🚀',
-            profileImageHash: profileImageHash || 'QmDefaultProfileImage',
-            postCount: 0,
-            followerCount: 0,
-            followingCount: 0,
-            isActive: true,
-          }
-        }));
-      }
+        },
+      });
 
-      // Force another profile fetch after a short delay to ensure data consistency
+      // Double-check profile after delay
       setTimeout(async () => {
-        console.log('🔄 Double-checking profile after registration...');
         await fetchUserProfile();
       }, 500);
-
-      console.log('✅ Registration completed in UserContext');
     } catch (err) {
       console.error("Error registering user:", err);
       setError("Failed to register user. Please check console for details.");
-      throw err; // Re-throw the error to be caught by the component using this context
+      throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Updates the current user's profile by re-fetching
   const updateProfile = async (): Promise<void> => {
     await fetchUserProfile();
   };
 
-  // Follows another user
   const followUser = async (userAddress: string): Promise<void> => {
     if (!account) throw new Error("No wallet connected");
 
@@ -199,7 +183,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     try {
       await contractFollowUser(userAddress);
-      await fetchUserProfile(); // Refresh to update follower/following counts
+      await fetchUserProfile();
     } catch (err) {
       console.error("Error following user:", err);
       setError("Failed to follow user.");
@@ -209,64 +193,43 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
-  // Unfollows another user
   const unfollowUser = async (userAddress: string): Promise<void> => {
-    // Placeholder: You'll need to implement this in your smart contract and expose it via useContract hook
     console.warn(
       "Unfollow functionality needs to be implemented in the smart contract and useContract hook."
     );
-    // Example if it were implemented:
-    // setIsLoading(true);
-    // setError(null);
-    // try {
-    //   await contractUnfollowUser(userAddress); // Assuming contractUnfollowUser exists
-    //   await fetchUserProfile();
-    // } catch (err) {
-    //   console.error("Error unfollowing user:", err);
-    //   setError("Failed to unfollow user.");
-    //   throw err;
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    // Remove unused parameter warning
+    void userAddress;
   };
 
-  // Fetches the profile of another user by their address
   const getOtherUserProfile = async (
     userAddress: string
   ): Promise<UserProfile | null> => {
-    if (!userAddress) return null; // Handle cases where address might be empty
+    if (!userAddress) return null;
 
     try {
       const userProfile = await getUserProfile(userAddress);
-      // Return profile only if it's active
       return userProfile && userProfile.isActive ? userProfile : null;
     } catch (err) {
       console.error(`Error fetching profile for ${userAddress}:`, err);
-      return null; // Return null on error or if profile not found/active
+      return null;
     }
   };
 
-  // Effect to fetch the current user's profile when the account or connection status changes
   useEffect(() => {
     if (account && isConnected) {
       fetchUserProfile();
     } else if (import.meta.env.DEV) {
-      // In development mode, try to fetch profile even without wallet connection
-      console.log('🔧 Dev mode: Fetching user profile without wallet connection');
       fetchUserProfile();
     } else {
-      setCurrentUser(null); // Clear user data if disconnected or no account
-      setIsLoading(false); // Ensure loading is false
+      setCurrentUser(null);
+      setIsLoading(false);
     }
-  }, [account, isConnected]); // Depend on account and isConnected
+  }, [account, isConnected]);
 
-  // --- Legacy Compatibility Aliases ---
-  // These map the older interface names to the new ones for backward compatibility
   const profile = currentUser?.profile || null;
   const hasProfile = currentUser?.isRegistered || false;
-  const createUserProfile = registerUser; // Alias registerUser for createUserProfile
+  const createUserProfile = registerUser;
 
-  // Combine all values to be provided by the context
   const value = {
     currentUser,
     isLoading,
@@ -276,7 +239,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     followUser,
     unfollowUser,
     getOtherUserProfile,
-    // Legacy compatibility
     profile,
     hasProfile,
     createUserProfile,

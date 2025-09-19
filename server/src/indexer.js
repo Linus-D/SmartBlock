@@ -8,14 +8,46 @@ dotenv.config();
 
 const RPC_URL = process.env.RPC_URL;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-const ABI_PATH = process.env.ABI_PATH || '../Project_Backend/frontend/constants/abi.json';
+const ABI_PATH = process.env.ABI_PATH || './Project_Backend/frontend/constants/abi.json';
 
 if (!RPC_URL || !CONTRACT_ADDRESS) {
   console.error('Indexer missing RPC_URL or CONTRACT_ADDRESS in .env');
   process.exit(1);
 }
 
-const abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), ABI_PATH), 'utf8'));
+let abi;
+try {
+  const abiPath = path.resolve(process.cwd(), ABI_PATH);
+  
+  // Check if file exists
+  if (!fs.existsSync(abiPath)) {
+    console.error(`ABI file not found at: ${abiPath}`);
+    console.error('Please ensure the ABI file exists or set the correct ABI_PATH in .env');
+    process.exit(1);
+  }
+  
+  const abiContent = fs.readFileSync(abiPath, 'utf8');
+  
+  // Validate JSON content
+  if (!abiContent.trim()) {
+    console.error('ABI file is empty');
+    process.exit(1);
+  }
+  
+  abi = JSON.parse(abiContent);
+  
+  // Validate ABI structure
+  if (!Array.isArray(abi)) {
+    console.error('Invalid ABI format: expected an array');
+    process.exit(1);
+  }
+  
+  console.log(`Successfully loaded ABI from: ${abiPath}`);
+} catch (error) {
+  console.error('Failed to load ABI file:', error.message);
+  console.error('ABI Path:', path.resolve(process.cwd(), ABI_PATH));
+  process.exit(1);
+}
 
 async function main() {
   const provider = new ethers.JsonRpcProvider(RPC_URL);

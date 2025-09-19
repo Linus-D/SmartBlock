@@ -11,6 +11,7 @@ export const mockUsers: Record<string, UserProfile> = {
     followerCount: 342,
     followingCount: 89,
     isActive: true,
+    isRegistered: true,
   },
   '0x123e4567e89b12d3a456426614174000': {
     username: 'bob_builder',
@@ -20,6 +21,7 @@ export const mockUsers: Record<string, UserProfile> = {
     followerCount: 156,
     followingCount: 201,
     isActive: true,
+    isRegistered: true,
   },
   '0x456789abcdef123456789abcdef123456789ab': {
     username: 'charlie_crypto',
@@ -29,6 +31,7 @@ export const mockUsers: Record<string, UserProfile> = {
     followerCount: 67,
     followingCount: 134,
     isActive: true,
+    isRegistered: true,
   },
   '0x789abcdef123456789abcdef123456789abcdef': {
     username: 'diana_dev',
@@ -38,6 +41,7 @@ export const mockUsers: Record<string, UserProfile> = {
     followerCount: 289,
     followingCount: 76,
     isActive: true,
+    isRegistered: true,
   },
   '0xabcdef123456789abcdef123456789abcdef12': {
     username: 'eve_explorer',
@@ -47,6 +51,7 @@ export const mockUsers: Record<string, UserProfile> = {
     followerCount: 445,
     followingCount: 123,
     isActive: true,
+    isRegistered: true,
   },
 };
 
@@ -363,11 +368,11 @@ export const getMockComments = (postId: number): ContractComment[] => {
 };
 
 export const getMockFollowers = (address: string): string[] => {
-  return mockFollowRelationships.followers[address] || [];
+  return mockFollowRelationships.followers[address as keyof typeof mockFollowRelationships.followers] || [];
 };
 
 export const getMockFollowing = (address: string): string[] => {
-  return mockFollowRelationships.following[address] || [];
+  return mockFollowRelationships.following[address as keyof typeof mockFollowRelationships.following] || [];
 };
 
 export const getMockPostLikes = (postId: number): string[] => {

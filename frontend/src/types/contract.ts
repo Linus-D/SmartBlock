@@ -57,13 +57,35 @@ export interface UserProfile {
   username: string;
   bio: string;
   profileImageHash: string;
+  profilePictureHash?: string; // Legacy compatibility
   postCount: number;
   followerCount: number;
   followingCount: number;
   isActive: boolean;
+  isRegistered: boolean;
+  registrationDate?: number;
 }
 
 export interface ContractError {
   message: string;
   code?: string;
+}
+
+export interface ContractConfig {
+  address: string;
+  chainId: number;
+  blockExplorerUrl: string;
+  startBlock?: number;
+}
+
+export interface NetworkConfig {
+  chainId: number;
+  name: string;
+  rpcUrl: string;
+  blockExplorerUrl: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
 }

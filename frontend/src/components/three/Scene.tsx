@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from "react";
+import React from "react";
 
 interface SceneProps {
   className?: string;
@@ -40,7 +40,6 @@ const WelcomeText: React.FC = () => {
 
 export const Scene: React.FC<SceneProps> = ({
   className = "",
-  interactive = true,
   showStars = true,
 }) => {
   return (

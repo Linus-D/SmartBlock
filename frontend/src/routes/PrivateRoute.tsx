@@ -24,7 +24,10 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   }
 
   // Redirect to connect page if not connected or not registered
-  if (!isConnected || !currentUser?.isRegistered) {
+  // In development mode, allow access without wallet connection
+  const requiresConnection = import.meta.env.DEV ? false : !isConnected;
+  
+  if (requiresConnection || !currentUser?.isRegistered) {
     return <Navigate to="/connect" state={{ from: location }} replace />;
   }
 

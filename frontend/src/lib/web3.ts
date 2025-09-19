@@ -2,8 +2,8 @@
 import { ethers } from "ethers";
 
 export const getProvider = () => {
-  if (typeof window !== "undefined" && window.ethereum) {
-    return new ethers.BrowserProvider(window.ethereum);
+  if (typeof window !== "undefined" && (window as any).ethereum) {
+    return new ethers.BrowserProvider((window as any).ethereum);
   }
   // Fallback to Sepolia testnet
   return new ethers.JsonRpcProvider(
@@ -21,17 +21,17 @@ export const getSigner = async () => {
 };
 
 export const switchToSepolia = async () => {
-  if (!window.ethereum) throw new Error("No wallet found");
+  if (!(window as any).ethereum) throw new Error("No wallet found");
 
   try {
-    await window.ethereum.request({
+    await (window as any).ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: "0xaa36a7" }], // Sepolia testnet
     });
   } catch (switchError: any) {
     // Chain not added, add it
     if (switchError.code === 4902) {
-      await window.ethereum.request({
+      await (window as any).ethereum.request({
         method: "wallet_addEthereumChain",
         params: [
           {

@@ -5,7 +5,6 @@ import {
   mockComments,
   mockFollowRelationships,
   mockPostLikes,
-  mockUserPosts,
   mockChats,
   mockMessages,
   getMockUserProfile,
@@ -29,13 +28,13 @@ export class MockContractService {
   private createdProfiles?: Map<string, UserProfile>;
 
   // Initialization methods
-  async initializeWithSigner(signer: any): Promise<void> {
+  async initializeWithSigner(_signer: any): Promise<void> {
     await delay(200);
     this.isInitialized = true;
     console.log('Mock contract service initialized with signer');
   }
 
-  async initializeWithProvider(provider: any): Promise<void> {
+  async initializeWithProvider(_provider: any): Promise<void> {
     await delay(200);
     this.isInitialized = true;
     console.log('Mock contract service initialized with provider');
@@ -62,35 +61,34 @@ export class MockContractService {
       this.createdProfiles = new Map();
     }
 
-    // Update or create the user profile in our session store
-    this.createdProfiles.set(defaultAccount, {
+    const newProfile = {
       username: username,
       bio: bio || 'New SmartBlock user! 🚀',
       profileImageHash: profileImageHash || 'QmDefaultProfileImage',
       postCount: 0,
       followerCount: 0,
       followingCount: 0,
-      isActive: true, // This is the key - mark as registered!
-    });
+      isActive: true,
+      isRegistered: true, // This is the key - mark as registered!
+    };
 
-    console.log('Mock: Created profile for', username, 'at address', defaultAccount);
+    // Update or create the user profile in our session store
+    this.createdProfiles.set(defaultAccount, newProfile);
+
+    console.log('✅ Mock: Profile created for', username);
   }
 
   async getUserProfile(userAddress: string): Promise<UserProfile | null> {
     this.ensureInitialized();
     await delay(300);
 
+    // Check for created profiles first
+
     // First check if we have a created profile for this address
     if (this.createdProfiles && this.createdProfiles.has(userAddress)) {
       const profile = this.createdProfiles.get(userAddress)!;
-      console.log('Mock: Retrieved created profile for', userAddress, ':', {
-        username: profile.username,
-        isActive: profile.isActive,
-        bio: profile.bio
-      });
       return profile;
     }
-
     // Fallback to static mock data
     return getMockUserProfile(userAddress);
   }
@@ -238,18 +236,18 @@ export class MockContractService {
     }
 
     // Add to followers list
-    if (!mockFollowRelationships.followers[userToFollow]) {
-      mockFollowRelationships.followers[userToFollow] = [];
+    if (!mockFollowRelationships.followers[userToFollow as keyof typeof mockFollowRelationships.followers]) {
+      (mockFollowRelationships.followers as any)[userToFollow] = [];
     }
 
-    if (!mockFollowRelationships.followers[userToFollow].includes(currentUser)) {
-      mockFollowRelationships.followers[userToFollow].push(currentUser);
+    if (!mockFollowRelationships.followers[userToFollow as keyof typeof mockFollowRelationships.followers]?.includes(currentUser)) {
+      mockFollowRelationships.followers[userToFollow as keyof typeof mockFollowRelationships.followers]?.push(currentUser);
     }
 
     // Update user profile counts
-    const userProfile = mockUsers[userToFollow];
+    const userProfile = mockUsers[userToFollow as keyof typeof mockUsers];
     if (userProfile) {
-      userProfile.followerCount = mockFollowRelationships.followers[userToFollow].length;
+      userProfile.followerCount = mockFollowRelationships.followers[userToFollow as keyof typeof mockFollowRelationships.followers]?.length || 0;
     }
 
     const currentUserProfile = mockUsers[currentUser];
@@ -267,21 +265,21 @@ export class MockContractService {
     const currentUser = '0x742d35Cc5FE4C9c5b6f8e8F57b7dB8D8d8d8d8d8'; // Mock current user
 
     // Remove from following list
-    if (mockFollowRelationships.following[currentUser]) {
-      mockFollowRelationships.following[currentUser] =
-        mockFollowRelationships.following[currentUser].filter(addr => addr !== userToUnfollow);
+    if (mockFollowRelationships.following[currentUser as keyof typeof mockFollowRelationships.following]) {
+      mockFollowRelationships.following[currentUser as keyof typeof mockFollowRelationships.following] =
+        mockFollowRelationships.following[currentUser as keyof typeof mockFollowRelationships.following].filter((addr: string) => addr !== userToUnfollow);
     }
 
     // Remove from followers list
-    if (mockFollowRelationships.followers[userToUnfollow]) {
-      mockFollowRelationships.followers[userToUnfollow] =
-        mockFollowRelationships.followers[userToUnfollow].filter(addr => addr !== currentUser);
+    if (mockFollowRelationships.followers[userToUnfollow as keyof typeof mockFollowRelationships.followers]) {
+      mockFollowRelationships.followers[userToUnfollow as keyof typeof mockFollowRelationships.followers] =
+        mockFollowRelationships.followers[userToUnfollow as keyof typeof mockFollowRelationships.followers].filter((addr: string) => addr !== currentUser);
     }
 
     // Update user profile counts
-    const userProfile = mockUsers[userToUnfollow];
+    const userProfile = mockUsers[userToUnfollow as keyof typeof mockUsers];
     if (userProfile) {
-      userProfile.followerCount = mockFollowRelationships.followers[userToUnfollow]?.length || 0;
+      userProfile.followerCount = mockFollowRelationships.followers[userToUnfollow as keyof typeof mockFollowRelationships.followers]?.length || 0;
     }
 
     const currentUserProfile = mockUsers[currentUser];
@@ -421,6 +419,13 @@ export class MockContractService {
     return feedPosts
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, limit);
+  }
+
+  async getAllUsers(): Promise<UserProfile[]> {
+    this.ensureInitialized();
+    await delay(300);
+    
+    return Object.values(mockUsers);
   }
 }
 

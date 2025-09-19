@@ -14,7 +14,7 @@ export const DataModeIndicator: React.FC<DataModeIndicatorProps> = ({
 }) => {
   const { getCurrentDataMode, setDataMode } = useContract();
   const [currentMode, setCurrentMode] = useState<{mode: DataMode; usingMock: boolean}>({
-    mode: DataMode.AUTO,
+    mode: DataMode.MOCK,
     usingMock: false
   });
   const [isExpanded, setIsExpanded] = useState(false);
@@ -78,9 +78,9 @@ export const DataModeIndicator: React.FC<DataModeIndicatorProps> = ({
                 }`}
               >
                 {mode.toUpperCase()}
-                {mode === DataMode.AUTO && (
+                {mode === DataMode.MOCK && currentMode.usingMock && (
                   <span className="text-xs opacity-75 ml-1">
-                    (using {currentMode.usingMock ? 'mock' : 'real'})
+                    (active)
                   </span>
                 )}
               </button>

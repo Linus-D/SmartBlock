@@ -1,6 +1,9 @@
 // src/components/ui/Button.tsx
-import React, { ButtonHTMLAttributes } from "react";
-import clsx from "clsx";
+import React, { type ButtonHTMLAttributes } from "react";
+// Simple className utility function to replace clsx
+const cn = (...classes: (string | undefined | null | false)[]): string => {
+  return classes.filter(Boolean).join(' ');
+};
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "sm" | "md" | "lg";
@@ -9,7 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   as?: React.ElementType;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+const Button: React.FC<ButtonProps> = ({
   size = "md",
   variant = "primary",
   loading = false,
@@ -31,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <Component
-      className={clsx(
+      className={cn(
         "inline-flex items-center justify-center rounded font-medium transition",
         sizeClasses[size],
         variantClasses[variant],
@@ -45,3 +48,5 @@ export const Button: React.FC<ButtonProps> = ({
     </Component>
   );
 };
+
+export default Button;

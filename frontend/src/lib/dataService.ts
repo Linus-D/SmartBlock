@@ -45,142 +45,88 @@ interface IDataService {
   getAllPosts?(limit?: number, offset?: number): Promise<Post[]>;
   getRecentPosts?(limit?: number): Promise<Post[]>;
   getFeedPosts?(userAddress: string, limit?: number): Promise<Post[]>;
+  getAllUsers?(): Promise<UserProfile[]>;
 }
 
 // Configuration for data mode
-export enum DataMode {
-  MOCK = 'mock',
-  REAL = 'real',
-  AUTO = 'auto', // Use mock if contract not available, otherwise real
-}
+export const DataMode = {
+  MOCK: 'mock',
+  REAL: 'real',
+} as const;
 
-// Data service manager that switches between mock and real data
+export type DataMode = typeof DataMode[keyof typeof DataMode];
+
+// Simplified data service manager
 class DataServiceManager implements IDataService {
-  private currentMode: DataMode = DataMode.AUTO;
-  private useMock: boolean = false;
+  private useMock: boolean;
 
   constructor() {
-    this.initializeMode();
-  }
-
-  private initializeMode(): void {
-    // Check environment variables and development flags
+    // Simple mode detection based on environment
     const envMode = import.meta.env.VITE_DATA_MODE as DataMode;
     const isDevelopment = import.meta.env.DEV;
     const hasContractAddress = !!import.meta.env.VITE_CONTRACT_ADDRESS;
-    const isLocalNetwork = import.meta.env.VITE_CHAIN_ID === '31337' || import.meta.env.VITE_CHAIN_ID === '1337';
 
-    // Set mode based on configuration
-    if (envMode) {
-      this.currentMode = envMode;
-    } else if (isDevelopment && !hasContractAddress) {
-      this.currentMode = DataMode.MOCK;
-    } else if (isDevelopment && isLocalNetwork) {
-      this.currentMode = DataMode.AUTO;
-    } else {
-      this.currentMode = DataMode.REAL;
-    }
-
-    this.updateUseMock();
-    console.log(`DataService initialized in ${this.currentMode} mode (using ${this.useMock ? 'mock' : 'real'} data)`);
-  }
-
-  private updateUseMock(): void {
-    switch (this.currentMode) {
-      case DataMode.MOCK:
-        this.useMock = true;
-        break;
-      case DataMode.REAL:
-        this.useMock = false;
-        break;
-      case DataMode.AUTO:
-        // Auto mode logic: use mock if contract service is not available or in development
-        this.useMock = import.meta.env.DEV && !this.isContractServiceAvailable();
-        break;
-    }
-  }
-
-  private isContractServiceAvailable(): boolean {
-    // Check if contract service is properly configured
-    try {
-      const hasAddress = !!import.meta.env.VITE_CONTRACT_ADDRESS;
-      const hasValidChain = !!import.meta.env.VITE_CHAIN_ID;
-      return hasAddress && hasValidChain;
-    } catch {
-      return false;
-    }
+    // Use mock if explicitly set to mock, or if in development without contract address
+    this.useMock = envMode === DataMode.MOCK || (isDevelopment && !hasContractAddress);
+    
+    console.log(`DataService initialized using ${this.useMock ? 'mock' : 'real'} data`);
   }
 
   private getService(): IDataService {
-    return this.useMock ? mockContractService : contractService;
+    if (this.useMock) {
+      return mockContractService;
+    }
+    
+    // Create a wrapper for contractService to match IDataService interface
+    return {
+      initializeWithSigner: async (signer: any) => contractService.initializeWithSigner(signer),
+      initializeWithProvider: async (provider: any) => contractService.initializeWithProvider(provider),
+      createProfile: async (username: string, bio?: string, profileImageHash?: string) => 
+        contractService.createProfile(username, bio, profileImageHash),
+      getUserProfile: async (userAddress: string) => contractService.getUserProfile(userAddress),
+      updateProfile: async () => { /* Not implemented in contractService */ },
+      createPost: async () => { /* Not implemented in contractService */ },
+      getPost: async () => null,
+      getUserPosts: async () => [],
+      getTotalPosts: async () => 0,
+      likePost: async () => { /* Not implemented in contractService */ },
+      unlikePost: async () => { /* Not implemented in contractService */ },
+      getPostLikes: async () => [],
+      addComment: async () => { /* Not implemented in contractService */ },
+      getPostComments: async () => [],
+      followUser: async () => { /* Not implemented in contractService */ },
+      unfollowUser: async () => { /* Not implemented in contractService */ },
+      getFollowers: async () => [],
+      getFollowing: async () => [],
+    };
   }
 
   // Public method to switch modes (useful for development/testing)
   public setMode(mode: DataMode): void {
-    this.currentMode = mode;
-    this.updateUseMock();
-    console.log(`DataService switched to ${mode} mode (using ${this.useMock ? 'mock' : 'real'} data)`);
+    this.useMock = mode === DataMode.MOCK;
+    console.log(`DataService switched to ${mode} mode`);
   }
 
   public getCurrentMode(): { mode: DataMode; usingMock: boolean } {
     return {
-      mode: this.currentMode,
+      mode: this.useMock ? DataMode.MOCK : DataMode.REAL,
       usingMock: this.useMock,
     };
   }
 
-  // Force refresh of mode detection (useful when wallet connects)
-  public refreshMode(): void {
-    if (this.currentMode === DataMode.AUTO) {
-      this.updateUseMock();
-    }
-  }
-
   // Initialization methods
   async initializeWithSigner(signer: any): Promise<void> {
-    try {
-      await this.getService().initializeWithSigner(signer);
-      // If we're in auto mode and real service works, switch to real
-      if (this.currentMode === DataMode.AUTO && this.useMock) {
-        this.useMock = false;
-        console.log('DataService: Switched to real data after successful wallet connection');
-      }
-    } catch (error) {
-      // If real service fails and we're in auto mode, fall back to mock
-      if (this.currentMode === DataMode.AUTO && !this.useMock) {
-        console.warn('DataService: Real service failed, falling back to mock data');
-        this.useMock = true;
-        await mockContractService.initializeWithSigner(signer);
-      } else if (this.useMock) {
-        // If we're already using mock service and it fails, try to initialize it again
-        await mockContractService.initializeWithSigner(signer);
-      } else {
-        throw error;
-      }
-    }
+    return this.getService().initializeWithSigner(signer);
   }
 
   async initializeWithProvider(provider: any): Promise<void> {
-    try {
-      await this.getService().initializeWithProvider(provider);
-      // If we're in auto mode and real service works, switch to real
-      if (this.currentMode === DataMode.AUTO && this.useMock) {
-        this.useMock = false;
-        console.log('DataService: Switched to real data after successful provider connection');
-      }
-    } catch (error) {
-      // If real service fails and we're in auto mode, fall back to mock
-      if (this.currentMode === DataMode.AUTO && !this.useMock) {
-        console.warn('DataService: Real service failed, falling back to mock data');
-        this.useMock = true;
-        await mockContractService.initializeWithProvider(provider);
-      } else if (this.useMock) {
-        // If we're already using mock service and it fails, try to initialize it again
-        await mockContractService.initializeWithProvider(provider);
-      } else {
-        throw error;
-      }
+    // If no provider is passed (dev mode), always use mock
+    if (!provider && import.meta.env.DEV) {
+      this.useMock = true;
+      return mockContractService.initializeWithProvider(null);
     }
+    
+    return this.getService().initializeWithProvider(provider);
   }
 
   // User Profile Functions
@@ -331,6 +277,14 @@ class DataServiceManager implements IDataService {
     }
     // Fallback: get recent posts
     return this.getRecentPosts(limit);
+  }
+
+  async getAllUsers(): Promise<UserProfile[]> {
+    if (this.getService().getAllUsers) {
+      return this.getService().getAllUsers!();
+    }
+    // Fallback: return empty array if not implemented
+    return [];
   }
 }
 
