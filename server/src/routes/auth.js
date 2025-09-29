@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { upsertUser, getUser } from '../db.js';
+import { upsertUser, getUser } from '../db-simple.js';
 
 const router = Router();
 

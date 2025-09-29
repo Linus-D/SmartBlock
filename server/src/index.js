@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'node:path';
-import { initSchema } from './db.js';
+import { initSchema } from './db-simple.js';
 
 import authRouter from './routes/auth.js';
 import postsRouter from './routes/posts.js';

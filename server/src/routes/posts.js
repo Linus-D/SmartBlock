@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { insertPost, updatePost, deletePost, getPostById, listPosts } from '../db.js';
+import { insertPost, updatePost, deletePost, getPostById, listPosts } from '../db-simple.js';
 
 const router = Router();
 

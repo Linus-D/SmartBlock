@@ -2,8 +2,6 @@
 import { Routes, Route } from "react-router-dom";
 
 // Pages
-import Welcome from "./pages/Welcome";
-import Connect from "./pages/Connect";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
 import { Messages } from "./pages/Messages";
@@ -13,15 +11,11 @@ import Notifications from "./pages/Notifications";
 // Routes
 import PrivateRoute from "./routes/PrivateRoute";
 
-// Development Components
-import { DataModeIndicator } from "./components/dev/DataModeIndicator";
-
 export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Welcome />} />
-        <Route path="/connect" element={<Connect />} />
+        <Route path="/" element={<Feed />} />
 
         <Route
           path="/feed"
@@ -77,9 +71,6 @@ export default function App() {
           }
         />
       </Routes>
-
-      {/* Development helper - only shows in development mode */}
-      <DataModeIndicator />
     </>
   );
 }

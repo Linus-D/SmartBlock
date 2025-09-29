@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listEvents } from '../db.js';
+import { listEvents } from '../db-simple.js';
 
 const router = Router();
 
