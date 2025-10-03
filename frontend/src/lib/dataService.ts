@@ -63,11 +63,11 @@ class DataServiceManager implements IDataService {
   constructor() {
     // Simple mode detection based on environment
     const envMode = import.meta.env.VITE_DATA_MODE as DataMode;
-    const isDevelopment = import.meta.env.DEV;
     const hasContractAddress = !!import.meta.env.VITE_CONTRACT_ADDRESS;
 
-    // Use mock if explicitly set to mock, or if in development without contract address
-    this.useMock = envMode === DataMode.MOCK || (isDevelopment && !hasContractAddress);
+    // Use mock if explicitly set to mock OR if no contract address is configured
+    // This makes Production safe by default for demos on Vercel.
+    this.useMock = envMode === DataMode.MOCK || !hasContractAddress;
     
     console.log(`DataService initialized using ${this.useMock ? 'mock' : 'real'} data`);
   }
