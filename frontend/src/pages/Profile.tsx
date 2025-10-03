@@ -23,7 +23,6 @@ import {
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [isEditingCover, setIsEditingCover] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
