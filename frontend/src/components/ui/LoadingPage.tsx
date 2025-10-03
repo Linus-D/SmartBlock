@@ -20,7 +20,7 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
         className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md mx-4"
       >
         <div className="mb-6">
-          <LoadingSpinner size="large" />
+          <LoadingSpinner size="lg" />
         </div>
 
         <motion.h2

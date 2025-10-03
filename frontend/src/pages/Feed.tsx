@@ -18,7 +18,6 @@ import Web3Dashboard from "../components/dashboard/Web3Dashboard";
 import { AIRecommendations } from "../components/recommendations";
 import ImageUploadComponent from "../components/ui/ImageUploadComponent";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
-import ModernLoader from "../components/ui/ModernLoader";
 
 // User profiles with interests for recommendation system
 const users = {

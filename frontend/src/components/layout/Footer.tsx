@@ -94,7 +94,10 @@ const Footer: React.FC = () => {
                           whileHover={{ x: 4 }}
                           className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                         >
-                          {link.icon && <link.icon className="w-4 h-4" />}
+                          {(() => {
+                            const Icon = (link as any).icon;
+                            return Icon ? <Icon className="w-4 h-4" /> : null;
+                          })()}
                           <span>{link.name}</span>
                         </motion.a>
                       </li>

@@ -171,7 +171,7 @@ const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Footer */}
-      {variant !== 'centered' && <Footer />}
+      <Footer />
     </div>
   );
 };

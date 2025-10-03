@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, Users, TrendingUp, Hash, UserPlus, MessageCircle } from "lucide-react";
 import Layout from "../components/layout/Layout";
-import { useWeb3 } from "../context/Web3Context";
 
 interface MockUser {
   id: string;
@@ -90,14 +89,13 @@ const trendingTopics: TrendingTopic[] = [
 ];
 
 const Explore: React.FC = () => {
-  const { account } = useWeb3();
+  // Mock mode: no wallet/account required here
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState(mockUsers);
   const [activeTab, setActiveTab] = useState<"users" | "trending">("users");
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
 
-  const mockAccount = "0x742d35Cc6635C0532FED36077723295bb9c3DDDD";
-  const currentAccount = account || mockAccount;
+  // Using mock/demo data: account not required in Explore mock view
 
   useEffect(() => {
     if (searchTerm) {

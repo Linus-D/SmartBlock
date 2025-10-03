@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Blocks, Wifi, Users, Zap, Shield, Globe2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Blocks, Wifi, Users, Shield, Globe2 } from 'lucide-react';
 
 interface PageLoaderProps {
   message?: string;

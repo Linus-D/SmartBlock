@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Send, Search, Plus, MoreVertical, Phone, Video } from "lucide-react";
 import Layout from "../components/layout/Layout";
-import { useWeb3 } from "../context/Web3Context";
 
 interface Chat {
   id: string;
@@ -143,15 +142,13 @@ const mockMessages: { [chatId: string]: Message[] } = {
 };
 
 export const Messages: React.FC = () => {
-  const { account } = useWeb3();
   const [chats] = useState<Chat[]>(mockChats);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const mockAccount = "0x742d35Cc6635C0532FED36077723295bb9c3DDDD";
-  const currentAccount = account || mockAccount;
+  // Mock mode: no wallet/account required here
 
   const filteredChats = chats.filter(chat =>
     chat.otherUser.username.toLowerCase().includes(searchTerm.toLowerCase())

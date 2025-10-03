@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckCheck, Filter, MoreHorizontal } from 'lucide-react';
+import { Bell, CheckCheck, MoreHorizontal } from 'lucide-react';
 import NotificationCard from './NotificationCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
@@ -133,7 +133,7 @@ const NotificationsList: React.FC<NotificationsListProps> = ({
     return (
       <div className={`bg-white dark:bg-gray-800 rounded-xl p-6 ${className}`}>
         <div className="flex items-center justify-center space-y-4 flex-col">
-          <LoadingSpinner size="medium" />
+          <LoadingSpinner size="md" />
           <p className="text-gray-600 dark:text-gray-400">
             Loading notifications...
           </p>

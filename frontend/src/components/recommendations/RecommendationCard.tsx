@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, UserPlus, Star, TrendingUp } from 'lucide-react';
+import { User, Star, TrendingUp } from 'lucide-react';
 
 interface RecommendationCardProps {
   type: 'user' | 'post' | 'trending';

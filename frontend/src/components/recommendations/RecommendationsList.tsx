@@ -149,7 +149,7 @@ const RecommendationsList: React.FC<RecommendationsListProps> = ({
     return (
       <div className={`bg-white dark:bg-gray-800 rounded-xl p-6 ${className}`}>
         <div className="flex items-center justify-center space-y-4 flex-col">
-          <LoadingSpinner size="medium" />
+          <LoadingSpinner size="md" />
           <p className="text-gray-600 dark:text-gray-400">
             Generating AI recommendations...
           </p>

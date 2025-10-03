@@ -12,7 +12,6 @@ import {
   Filter
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
-import { useWeb3 } from "../context/Web3Context";
 
 interface Notification {
   id: string;
@@ -129,12 +128,11 @@ const mockNotifications: Notification[] = [
 ];
 
 const Notifications: React.FC = () => {
-  const { account } = useWeb3();
+  // Mock mode: no wallet/account required here
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [filter, setFilter] = useState<"all" | "unread" | "mentions" | "transactions">("all");
 
-  const mockAccount = "0x742d35Cc6635C0532FED36077723295bb9c3DDDD";
-  const currentAccount = account || mockAccount;
+  // No account usage in mock notifications
 
   const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {
