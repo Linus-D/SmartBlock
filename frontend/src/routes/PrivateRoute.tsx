@@ -14,6 +14,12 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { currentUser, isLoading } = useUser();
   const location = useLocation();
 
+  // In MOCK mode, allow access to all routes without gating
+  const isMockMode = (import.meta as any).env?.VITE_DATA_MODE === 'mock' || (import.meta as any).env?.VITE_DATA_MODE === 'MOCK';
+  if (isMockMode) {
+    return <>{children}</>;
+  }
+
   // Show loading while connecting or checking user registration
   if (isConnecting || isLoading) {
     return (
