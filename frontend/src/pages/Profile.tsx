@@ -274,7 +274,7 @@ export default function Profile() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsEditingProfile(true)}
+                  onClick={() => { /* no-op in mock mode */ }}
                   className="flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium"
                 >
                   <Edit3 size={18} />
