@@ -1,5 +1,5 @@
 // src/utils/integrationTest.ts
-import { contractService } from '../lib/contractService';
+import { getContractService } from '../lib/contractService';
 import { CONTRACT_CONFIG, isSupportedNetwork } from '../lib/contractConfig';
 
 export interface IntegrationTestResult {
@@ -17,6 +17,7 @@ export async function runIntegrationTest(
   provider?: any,
   chainId?: number
 ): Promise<IntegrationTestResult> {
+  const isMockMode = (import.meta as any).env?.VITE_DATA_MODE === 'mock';
   const result: IntegrationTestResult = {
     configurationValid: false,
     contractAddressValid: false,
@@ -24,6 +25,15 @@ export async function runIntegrationTest(
     errors: [],
     warnings: []
   };
+
+  // In mock mode, skip all contract-related validation and initialization
+  if (isMockMode) {
+    result.configurationValid = true;
+    result.contractAddressValid = false; // intentionally not required in mock
+    result.networkSupported = true;
+    result.warnings.push('Running in MOCK mode: skipping contract address and network validation');
+    return result;
+  }
 
   // Test 1: Check configuration
   try {
@@ -57,6 +67,7 @@ export async function runIntegrationTest(
   // Test 3: Try to initialize contract service
   if (provider && result.configurationValid) {
     try {
+      const contractService = getContractService();
       contractService.initializeWithProvider(provider);
       result.warnings.push('Contract service initialized successfully with provider');
     } catch (error: any) {
