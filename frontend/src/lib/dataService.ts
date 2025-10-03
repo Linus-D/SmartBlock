@@ -1,6 +1,6 @@
 // src/lib/dataService.ts
 import { mockContractService } from './mockService';
-import { contractService } from './contractService';
+import { getContractService } from './contractService';
 import type { UserProfile, Post, ContractComment, ContractMessage, ContractChat } from '../types/contract';
 
 // Data service interface that both mock and real services must implement
@@ -76,12 +76,13 @@ class DataServiceManager implements IDataService {
     if (this.useMock) {
       return mockContractService;
     }
-    
-    // Create a wrapper for contractService to match IDataService interface
+
+    // Lazily create a contract service instance only in REAL mode
+    const contractService = getContractService();
     return {
       initializeWithSigner: async (signer: any) => contractService.initializeWithSigner(signer),
       initializeWithProvider: async (provider: any) => contractService.initializeWithProvider(provider),
-      createProfile: async (username: string, bio?: string, profileImageHash?: string) => 
+      createProfile: async (username: string, bio?: string, profileImageHash?: string) =>
         contractService.createProfile(username, bio, profileImageHash),
       getUserProfile: async (userAddress: string) => contractService.getUserProfile(userAddress),
       updateProfile: async () => { /* Not implemented in contractService */ },

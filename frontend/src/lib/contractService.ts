@@ -117,5 +117,7 @@ export class SocialMediaContractService {
   // Add updateProfile if required (optional)
 }
 
-// Singleton instance
-export const contractService = new SocialMediaContractService();
+// Factory to create instances on demand (avoid eager validation in mock mode)
+export const getContractService = (): SocialMediaContractService => {
+  return new SocialMediaContractService();
+};
